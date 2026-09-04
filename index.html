@@ -658,6 +658,9 @@ function attachTableFilters(tableId) {
       const clearEl = pop.querySelector('.fp-clear');
       const closeEl = pop.querySelector('.fp-close');
 
+      // 弹窗内所有点击阻止冒泡到 backdrop
+      pop.addEventListener('click', e => e.stopPropagation());
+
       const renderList = (filter) => {
         const f = (filter || '').toLowerCase();
         listEl.innerHTML = sorted.filter(v => v.toLowerCase().includes(f)).map(v => {
@@ -723,10 +726,12 @@ function attachTableFilters(tableId) {
         if (backdrop) backdrop.remove();
       });
 
-      // 点击弹窗外关闭(只对 backdrop 生效,避免影响 pop 内部按钮)
-      backdrop.addEventListener('click', () => {
-        pop.remove();
-        backdrop.remove();
+      // 点击弹窗外关闭(只对 backdrop 生效,不影响 pop 内部按钮)
+      backdrop.addEventListener('mousedown', e => {
+        if (e.target === backdrop) {
+          pop.remove();
+          backdrop.remove();
+        }
       });
     });
   });
