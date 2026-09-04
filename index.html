@@ -702,13 +702,10 @@ function attachTableFilters(tableId) {
       applyEl.addEventListener('click', e => {
         e.stopPropagation();
         e.preventDefault();
-        // 调试:直接看 apply 是否执行
-        console.log('[APPLY CLICKED] col=', col);
         try {
           const checked = new Set(
             Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
           );
-          console.log('[APPLY] checked=', Array.from(checked));
           applyFilter(col, checked, sorted.length, btn, pop, backdrop);
         } catch(err) {
           console.error('[APPLY ERROR]', err);
@@ -745,20 +742,17 @@ function closeAllFilterPopovers() {
 }
 
 function applyFilter(col, checked, sortedLen, btn, pop, backdrop) {
-  console.log('[APPLY-FILTER] col=', col, 'checked size=', checked.size, 'sortedLen=', sortedLen);
-  const isAll = (checked.size === sortedLen);
-  if (isAll || checked.size === 0) {
-    console.log('[APPLY-FILTER] removing activeFilters[col]');
+  // 修复:不再用 isAll 判断(空字符串不算值,导致 isAll 误判)
+  // 只在 0 个勾选时清除筛选
+  if (checked.size === 0) {
     delete activeFilters[col];
   } else {
-    console.log('[APPLY-FILTER] setting activeFilters[col]');
     activeFilters[col] = checked;
   }
-  console.log('[APPLY-FILTER] activeFilters now:', JSON.stringify(Object.fromEntries(Object.entries(activeFilters).map(([k,v]) => [k, Array.from(v)]))));
   document.getElementById('pageInput').value = 1;
   const cnt = checked.size;
-  btn.classList.toggle('active', !isAll && cnt > 0);
-  btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
+  btn.classList.toggle('active', cnt > 0);
+  btn.textContent = cnt === 0 ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
   if (pop && pop.parentNode) pop.remove();
   if (backdrop && backdrop.parentNode) backdrop.remove();
   renderProducts();
