@@ -141,10 +141,11 @@
     <div class="card">
       <div class="card-header">Sheet 03 · 全站产品价格 · 共 <span id="productCount">9</span> 款 · 首次全量 baseline (下周五 9/11 开始 diff)</div>
       <div style="padding:10px 16px;background:#fffbeb;border-bottom:1px solid #f0e6c8;font-size:12px;color:#856404;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-        <span>📊 <span id="visibleCount">0</span> / 1503 行显示</span>
+        <span>📊 显示 <span id="visibleCount">0</span> 行(共 1503)</span>
         <span>分页:<button class="page-btn" data-page="1">首页</button> <button class="page-btn" data-page="prev">‹</button> <input id="pageInput" type="number" min="1" value="1" style="width:60px"> / <span id="totalPages">0</span> <button class="page-btn" data-page="next">›</button> <button class="page-btn" data-page="last">末页</button></span>
         <span>每页:<select id="pageSize"><option>25</option><option selected>50</option><option>100</option><option>200</option></select></span>
-        <span style="margin-left:auto">💡 表头点列排序,点 "▼ 筛选" 多选筛</span>
+        <span style="margin-left:auto">💡 表头点列排序,点 "▼ 筛选" 多选筛(跨页生效)</span>
+        <button id="clearAllFilters" style="padding:3px 10px;border:1px solid #d2d2d7;background:#fff;border-radius:4px;cursor:pointer;font-size:12px">清空筛选</button>
       </div>
       <div class="table-wrap">
         <table id="productsTable">
@@ -302,6 +303,7 @@ let blogsData = [];
 let historyFiles = [];
 let blogProductMap = {};
 let blogHistory = {};  // 上一周的产品集合 {blog_url: [handle, ...]}
+let activeFilters = {};  // {col: Set(values)} 跨页保留筛选状态
 
 const parsePrice = s => parseFloat((s || '').replace(/[^\d.]/g, '')) || 0;
 
@@ -311,21 +313,43 @@ function updateMeta() {
   document.getElementById('productCount').textContent = productsData.products.length;
 }
 
+function getFilteredProducts() {
+  // 按 activeFilters 跨页过滤 1503 个产品
+  if (!Object.keys(activeFilters).length) return productsData.products;
+  return productsData.products.filter(p => {
+    for (const [col, values] of Object.entries(activeFilters)) {
+      if (!values || values.size === 0) continue;
+      let cellVal = (p[col] !== undefined && p[col] !== null) ? String(p[col]) : '';
+      // 多值列(空格分隔)拆开匹配
+      const cellValues = cellVal.split(/\s+/).filter(Boolean);
+      const match = cellValues.some(v => values.has(v));
+      if (!match) return false;
+    }
+    return true;
+  });
+}
+
 function renderProducts() {
   const tbody = document.getElementById('productsBody');
+  // 先过滤(全 1503),再分页
+  const filtered = getFilteredProducts();
   // 分页
   const pageSize = parseInt(document.getElementById('pageSize').value) || 50;
-  const totalPages = Math.max(1, Math.ceil(productsData.products.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   document.getElementById('totalPages').textContent = totalPages;
   let curPage = parseInt(document.getElementById('pageInput').value) || 1;
   if (curPage > totalPages) curPage = totalPages;
   if (curPage < 1) curPage = 1;
   document.getElementById('pageInput').value = curPage;
   const start = (curPage - 1) * pageSize;
-  const slice = productsData.products.slice(start, start + pageSize);
+  const slice = filtered.slice(start, start + pageSize);
   document.getElementById('visibleCount').textContent = slice.length;
   const footer = document.getElementById('productsFooter');
-  footer.textContent = `第 ${start+1}-${Math.min(start+pageSize, productsData.products.length)} 行,共 ${productsData.products.length} 行 · 第 ${curPage}/${totalPages} 页`;
+  const totalAll = productsData.products.length;
+  const isFiltered = filtered.length !== totalAll;
+  footer.innerHTML = isFiltered
+    ? `第 ${start+1}-${Math.min(start+pageSize, filtered.length)} 行,筛选后共 <strong>${filtered.length}</strong> / ${totalAll} 行 · 第 ${curPage}/${totalPages} 页`
+    : `第 ${start+1}-${Math.min(start+pageSize, filtered.length)} 行,共 ${filtered.length} 行 · 第 ${curPage}/${totalPages} 页`;
 
   const rows = slice.map(p => {
     const priceHtml = `<span class="price">${p.price || '—'}</span>` +
@@ -397,6 +421,19 @@ function renderProducts() {
     document.getElementById('pageInput').value = 1;
     renderProducts();
   };
+  // 清空全部筛选
+  const clearBtn = document.getElementById('clearAllFilters');
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      activeFilters = {};
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active');
+        b.textContent = '▼ 筛选';
+      });
+      document.getElementById('pageInput').value = 1;
+      renderProducts();
+    };
+  }
 }
 
 function renderBlogs() {
@@ -648,22 +685,20 @@ function attachTableFilters(tableId) {
           Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
         );
         const isAll = (checked.size === sorted.length);
-        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-          const cell = row.children[colIdx];
-          if (!cell) return;
-          const txt = cell.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-          if (isAll || checked.size === 0) {
-            row.style.display = '';
-          } else {
-            // 多值列(collection1/2/3 用换行分隔)→ 任意包含即显示
-            const cellValues = txt.split(/\s+/).filter(Boolean);
-            const match = cellValues.some(v => checked.has(v));
-            row.style.display = match ? '' : 'none';
-          }
-        });
-        btn.classList.toggle('active', !isAll);
-        btn.textContent = isAll ? '▼ 筛选' : `▼ 筛选 (${checked.size})`;
+        if (isAll || checked.size === 0) {
+          delete activeFilters[col];
+        } else {
+          activeFilters[col] = checked;
+        }
+        // 翻到第 1 页(避免当前页超出新范围)
+        document.getElementById('pageInput').value = 1;
+        // 更新该列按钮状态
+        const colIdx = th.cellIndex;
+        const cnt = checked.size;
+        btn.classList.toggle('active', !isAll && cnt > 0);
+        btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
         pop.remove();
+        renderProducts();
       });
 
       // 点击弹窗外关闭
