@@ -608,6 +608,7 @@ function attachTableFilters(tableId) {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       closeAllFilterPopovers();
+      const col = th.dataset.col;
       const colIdx = th.cellIndex;
       const tbody = table.querySelector('tbody');
       // 收集该列所有非空唯一值
