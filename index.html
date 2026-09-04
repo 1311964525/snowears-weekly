@@ -55,6 +55,15 @@
   .stockout{color:#ff9500;font-weight:500;font-size:12px}
   .empty{color:#ccc}
   .col-meta{font-size:11px;color:#666;margin-top:2px}
+  .prod-strip{display:flex;flex-wrap:nowrap;gap:4px;align-items:center;overflow-x:auto;max-width:360px;padding:2px 0;scrollbar-width:thin}
+  .prod-strip::-webkit-scrollbar{height:4px}
+  .prod-strip::-webkit-scrollbar-thumb{background:#d2d2d7;border-radius:2px}
+  .prod-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 6px 2px 2px;background:#f5f5f7;border:1px solid #e5e5e7;border-radius:12px;font-size:11px;color:#1d1d1f;white-space:nowrap;flex-shrink:0;cursor:pointer;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  .prod-chip:hover{background:#e8e8ed;border-color:#0066cc}
+  .prod-chip img{width:20px;height:20px;border-radius:50%;object-fit:cover;background:#fff;flex-shrink:0}
+  .prod-chip .pc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prod-count{display:inline-block;padding:2px 6px;background:#e8e8ed;color:#666;border-radius:10px;font-size:10px;font-weight:500;flex-shrink:0}
+  .prod-empty{color:#ccc;font-size:11px}
   .filter-popover{width:260px;max-height:380px;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:12px;display:flex;flex-direction:column;overflow:hidden}
   .fp-header{display:flex;gap:6px;padding:8px;border-bottom:1px solid #f0f0f0}
   .fp-search{flex:1;padding:4px 8px;border:1px solid #d2d2d7;border-radius:4px;font-size:12px}
@@ -191,8 +200,7 @@
               <th data-col="author" data-type="text">作者</th>
               <th data-col="tags" data-type="text">标签</th>
               <th data-col="related_products" data-type="num">关联产品数</th>
-              <th data-col="bestseller_link" data-type="text">BestSeller关联</th>
-              <th data-col="word_count" data-type="num">字数</th>
+              <th data-col="bestseller_link" data-type="text">提到的产品</th>
             </tr>
           </thead>
           <tbody id="blogsBody"></tbody>
@@ -257,7 +265,7 @@
         <h3 style="margin:16px 0 8px">🎟️ Sheet 05 字段</h3>
         <p style="font-size:13px">记录 active 状态的折扣码和无码促销活动,共 4 项(LABOR20 + 3 项无码)。</p>
         <h3 style="margin:16px 0 8px">📝 Sheet 06 字段</h3>
-        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / BestSeller关联 / 字数</p>
+        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / 提到的产品(可点击跳产品页)</p>
         <h3 style="margin:16px 0 8px">🔧 数据来源</h3>
         <ul style="padding-left:20px;line-height:1.8;font-size:13px">
           <li>产品数据:Shopify JSON 端点 <code>/products/{handle}.json</code></li>
@@ -278,6 +286,7 @@ let productsData = [];
 let promotionsData = [];
 let blogsData = [];
 let historyFiles = [];
+let blogProductMap = {};
 
 const parsePrice = s => parseFloat((s || '').replace(/[^\d.]/g, '')) || 0;
 
@@ -353,11 +362,31 @@ function renderBlogs() {
       <td>${b.author || '—'}</td>
       <td>${tagsHtml || '<span class="empty">—</span>'}</td>
       <td>${b.related_products ?? '—'}</td>
-      <td>${b.bestseller_link || '—'}</td>
-      <td>${b.word_count || '<span class="empty">—</span>'}</td>
+      <td class="td-products" data-count="${b.related_products || 0}">
+        <div class="prod-strip" data-blog="${b.url}"></div>
+      </td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows;
+  // 渲染产品 chip 列表
+  blogsData.blogs.forEach(b => {
+    const list = b.related_products_list || [];
+    const cell = tbody.querySelector(`.prod-strip[data-blog="${b.url}"]`);
+    if (!cell) return;
+    if (!list.length) {
+      cell.innerHTML = '<span class="prod-empty">— 文中未嵌入产品链接 —</span>';
+      return;
+    }
+    const visible = list.slice(0, 3).map(h => {
+      const m = blogProductMap[h] || {title: h, url: `https://snowears.com/products/${h}`, image: ''};
+      const imgHtml = m.image
+        ? `<img src="${m.image}" alt="" loading="lazy" onerror="this.style.display='none'">`
+        : `<div style="width:20px;height:20px;background:#e5e5e7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999">📦</div>`;
+      return `<a class="prod-chip" href="${m.url}" target="_blank" rel="noopener" title="${m.title}">${imgHtml}<span class="pc-name">${m.title}</span></a>`;
+    }).join('');
+    const overflowHtml = list.length > 3 ? `<span class="prod-count">+${list.length - 3}</span>` : '';
+    cell.innerHTML = visible + overflowHtml;
+  });
   attachTableSort('blogsTable');
   attachTableFilters('blogsTable');
 }
@@ -582,15 +611,19 @@ document.querySelectorAll('.tab').forEach(btn => {
 
 async function loadData() {
   try {
-    const [pRes, prRes, bRes, hRes] = await Promise.all([
+    const [pRes, prRes, bRes, mRes, hRes] = await Promise.all([
       fetch('data/products.json'),
       fetch('data/promotions.json'),
       fetch('data/blogs.json'),
+      fetch('data/blog_product_map.json').catch(() => ({ok: false, json: () => ({})})),
       fetch('data/history/index.json').catch(() => ({ok: false, json: () => []}))
     ]);
     productsData = await pRes.json();
     promotionsData = await prRes.json();
     blogsData = await bRes.json();
+    if (mRes && mRes.ok) {
+      try { blogProductMap = await mRes.json(); } catch { blogProductMap = {}; }
+    }
     if (hRes && hRes.ok) {
       try { historyFiles = await hRes.json(); } catch { historyFiles = []; }
     }
