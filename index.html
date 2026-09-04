@@ -159,9 +159,6 @@
               <th data-col="collection1" data-type="text">Collection</th>
               <th data-col="stock_status" data-type="text">库存</th>
               <th data-col="variants_count" data-type="num">变体</th>
-              <th data-col="rating" data-type="num">评分</th>
-              <th data-col="reviews_count" data-type="num">评论</th>
-              <th data-col="weekly_new_reviews" data-type="num">本周新增评论数(上周六至本周五)</th>
               <th data-col="is_homepage" data-type="text">是否首页产品(主页 HTML 链接)</th>
               <th data-col="week_status" data-type="text">周变化状态(对比上周:新增/已存在/已下架)</th>
             </tr>
@@ -270,9 +267,6 @@
           <li><strong>产品URL</strong>:完整商品页 URL</li>
           <li><strong>库存状态</strong>:全部有货留空,缺货颜色写"XX-无库存"</li>
           <li><strong>变体数</strong>:variants 数量(颜色 × 尺码组合)</li>
-          <li><strong>评分</strong>:0-5 星</li>
-          <li><strong>评论数</strong>:累计评论数</li>
-          <li><strong>本周新增评论数</strong>:上周六至本周五新增评论</li>
           <li><strong>是否首页产品</strong>:本次扫描在首页则"是"</li>
           <li><strong>历史首页时间</strong>:过去曾在首页的时间段</li>
         </ul>
@@ -373,9 +367,6 @@ function renderProducts() {
       <td>${collHtml}</td>
       <td>${stockHtml}</td>
       <td>${p.variants_count || 0}</td>
-      <td>${p.rating || '<span class="empty">—</span>'}</td>
-      <td>${p.reviews_count || '<span class="empty">—</span>'}</td>
-      <td>${p.weekly_new_reviews || '<span class="empty">—</span>'}</td>
       <td>${homeBadge}</td>
       <td>${weekBadge}</td>
     </tr>`;
