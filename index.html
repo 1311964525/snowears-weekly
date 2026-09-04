@@ -156,7 +156,7 @@
               <th data-col="price_num" data-type="num">当前价</th>
               <th data-col="discount" data-type="text">折扣</th>
               <th data-col="on_sale" data-type="text">Sale</th>
-              <th data-col="collection1" data-type="text">Collection</th>
+              <th data-col="collection" data-type="text">产品分类(对应 product_type,可多选)</th>
               <th data-col="stock_status" data-type="text">库存</th>
               <th data-col="variants_count" data-type="num">变体</th>
               <th data-col="is_homepage" data-type="text">是否首页产品(主页 HTML 链接)</th>
@@ -263,7 +263,7 @@
           <li><strong>原价</strong>:compare_at_price,无则空</li>
           <li><strong>折扣率</strong>:无则"无折扣",有则"X% off"</li>
           <li><strong>Sale状态</strong>:是否在售折扣</li>
-          <li><strong>Collection1/2/3</strong>:所属 collection,多值</li>
+          <li><strong>Collection(产品分类)</strong>:对应 Shopify product_type,单列多值(空格分隔),每个 product_type 独立可筛</li>
           <li><strong>产品URL</strong>:完整商品页 URL</li>
           <li><strong>库存状态</strong>:全部有货留空,缺货颜色写"XX-无库存"</li>
           <li><strong>变体数</strong>:variants 数量(颜色 × 尺码组合)</li>
@@ -347,7 +347,7 @@ function renderProducts() {
     const stockHtml = p.stock_status
       ? `<span class="stockout">${p.stock_status}</span>`
       : '<span class="empty">—</span>';
-    const collHtml = [p.collection1, p.collection2, p.collection3].filter(Boolean).map(c =>
+    const collHtml = (p.collection || '').split(/\s+/).filter(Boolean).map(c =>
       `<div style="font-size:11px;color:#666">${c}</div>`
     ).join('') || '<span class="empty">—</span>';
     const imgHtml = p.image
