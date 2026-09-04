@@ -64,6 +64,16 @@
   .prod-chip .pc-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .prod-count{display:inline-block;padding:2px 6px;background:#e8e8ed;color:#666;border-radius:10px;font-size:10px;font-weight:500;flex-shrink:0}
   .prod-empty{color:#ccc;font-size:11px}
+  .diff-cell{display:flex;flex-direction:column;gap:4px;font-size:11px;line-height:1.3;min-width:120px}
+  .diff-row{display:flex;align-items:flex-start;gap:4px;line-height:1.4}
+  .diff-label{flex-shrink:0;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;white-space:nowrap}
+  .diff-add{background:#d1f4d8;color:#0a6b1f}
+  .diff-remove{background:#ffd1d1;color:#a00}
+  .diff-same{color:#999;font-size:11px;font-style:italic}
+  .diff-list{display:flex;flex-wrap:wrap;gap:3px;flex:1}
+  .diff-item{padding:1px 6px;background:#f5f5f7;border-radius:3px;font-size:10px;color:#1d1d1f}
+  .diff-item.add{background:#d1f4d8;color:#0a6b1f}
+  .diff-item.remove{background:#ffd1d1;color:#a00;text-decoration:line-through}
   .filter-popover{width:260px;max-height:380px;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:12px;display:flex;flex-direction:column;overflow:hidden}
   .fp-header{display:flex;gap:6px;padding:8px;border-bottom:1px solid #f0f0f0}
   .fp-search{flex:1;padding:4px 8px;border:1px solid #d2d2d7;border-radius:4px;font-size:12px}
@@ -200,7 +210,7 @@
               <th data-col="author" data-type="text">作者</th>
               <th data-col="tags" data-type="text">标签</th>
               <th data-col="related_products" data-type="num">关联产品数</th>
-              <th data-col="bestseller_link" data-type="text">提到的产品</th>
+              <th data-col="products_diff" data-type="text">本周产品变化</th>
             </tr>
           </thead>
           <tbody id="blogsBody"></tbody>
@@ -265,7 +275,7 @@
         <h3 style="margin:16px 0 8px">🎟️ Sheet 05 字段</h3>
         <p style="font-size:13px">记录 active 状态的折扣码和无码促销活动,共 4 项(LABOR20 + 3 项无码)。</p>
         <h3 style="margin:16px 0 8px">📝 Sheet 06 字段</h3>
-        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / 提到的产品(可点击跳产品页)</p>
+        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / 提到的产品 / 本周产品变化(对比上次快照)</p>
         <h3 style="margin:16px 0 8px">🔧 数据来源</h3>
         <ul style="padding-left:20px;line-height:1.8;font-size:13px">
           <li>产品数据:Shopify JSON 端点 <code>/products/{handle}.json</code></li>
@@ -287,6 +297,7 @@ let promotionsData = [];
 let blogsData = [];
 let historyFiles = [];
 let blogProductMap = {};
+let blogHistory = {};  // 上一周的产品集合 {blog_url: [handle, ...]}
 
 const parsePrice = s => parseFloat((s || '').replace(/[^\d.]/g, '')) || 0;
 
@@ -365,6 +376,7 @@ function renderBlogs() {
       <td class="td-products" data-count="${b.related_products || 0}">
         <div class="prod-strip" data-blog="${b.url}"></div>
       </td>
+      <td class="td-diff" data-blog="${b.url}"></td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows;
@@ -387,6 +399,40 @@ function renderBlogs() {
     const overflowHtml = list.length > 3 ? `<span class="prod-count">+${list.length - 3}</span>` : '';
     cell.innerHTML = visible + overflowHtml;
   });
+  // 渲染产品 diff(对比上周)
+  const curDate = productsData.scan_date || '本';
+  const prevDate = historyFiles.filter(f => f.startsWith('blogs_')).sort().slice(-2, -1)[0]?.replace('blogs_', '').replace('.json', '') || '上周';
+  blogsData.blogs.forEach(b => {
+    const cell = tbody.querySelector(`.td-diff[data-blog="${b.url}"]`);
+    if (!cell) return;
+    const curSet = new Set(b.related_products_list || []);
+    const prevSet = new Set(blogHistory[b.url] || []);
+    const added = [...curSet].filter(h => !prevSet.has(h));
+    const removed = [...prevSet].filter(h => !curSet.has(h));
+    const handleToName = h => (blogProductMap[h] && blogProductMap[h].title) || h;
+    if (!prevSet.size && !curSet.size) {
+      cell.innerHTML = '<span class="diff-same">— 无数据 —</span>';
+      return;
+    }
+    if (!prevSet.size) {
+      // 首次快照,无对比
+      cell.innerHTML = '<span class="diff-same">首次快照(无上周对比)</span>';
+      return;
+    }
+    let html = '<div class="diff-cell">';
+    if (added.length) {
+      html += `<div class="diff-row"><span class="diff-label diff-add">+${added.length}</span><span class="diff-list">${added.map(h => `<span class="diff-item add" title="${handleToName(h)}">${handleToName(h).length > 18 ? handleToName(h).slice(0,18) + '…' : handleToName(h)}</span>`).join('')}</span></div>`;
+    }
+    if (removed.length) {
+      html += `<div class="diff-row"><span class="diff-label diff-remove">-${removed.length}</span><span class="diff-list">${removed.map(h => `<span class="diff-item remove" title="${handleToName(h)}">${handleToName(h).length > 18 ? handleToName(h).slice(0,18) + '…' : handleToName(h)}</span>`).join('')}</span></div>`;
+    }
+    if (!added.length && !removed.length) {
+      html += '<span class="diff-same">无变化</span>';
+    }
+    html += '</div>';
+    cell.innerHTML = html;
+  });
+
   attachTableSort('blogsTable');
   attachTableFilters('blogsTable');
 }
@@ -624,7 +670,22 @@ async function loadData() {
     if (mRes && mRes.ok) {
       try { blogProductMap = await mRes.json(); } catch { blogProductMap = {}; }
     }
-    if (hRes && hRes.ok) {
+    // 加载历史快照(用于 diff)
+  const historyList = (historyFiles || []).filter(f => f.startsWith('blogs_')).sort();
+  const prevBlogFile = historyList.length > 1 ? historyList[historyList.length - 2] : null;  // 上上周
+  if (prevBlogFile) {
+    try {
+      const r = await fetch(`data/history/${prevBlogFile}`);
+      if (r.ok) {
+        const prevBlogs = await r.json();
+        const prevMap = {};
+        (prevBlogs.blogs || []).forEach(b => { prevMap[b.url] = b.related_products_list || []; });
+        blogHistory = prevMap;
+      }
+    } catch {}
+  }
+
+  if (hRes && hRes.ok) {
       try { historyFiles = await hRes.json(); } catch { historyFiles = []; }
     }
     updateMeta();
