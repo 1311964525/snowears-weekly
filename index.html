@@ -620,11 +620,7 @@ function attachTableFilters(tableId) {
       });
       const sorted = Array.from(values).sort((a, b) => a.localeCompare(b, 'zh'));
 
-      // 弹窗
-      // 创建背景遮罩 + 弹窗
-      const backdrop = document.createElement('div');
-      backdrop.className = 'filter-backdrop';
-      document.body.appendChild(backdrop);
+      // 创建弹窗
       const pop = document.createElement('div');
       pop.className = 'filter-popover';
       pop.innerHTML = `
@@ -641,14 +637,12 @@ function attachTableFilters(tableId) {
           <button class="fp-apply" type="button">应用</button>
           <button class="fp-cancel" type="button">取消</button>
         </div>`;
+      // 弹窗 z-index 高于 backdrop,先 appendChild pop 再 appendChild backdrop
       document.body.appendChild(pop);
-
-      // 定位到 btn 下方
-      const rect = btn.getBoundingClientRect();
-      pop.style.position = 'fixed';
-      pop.style.top = (rect.bottom + 4) + 'px';
-      pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
-      pop.style.zIndex = 9999;
+      const backdrop = document.createElement('div');
+      backdrop.className = 'filter-backdrop';
+      document.body.appendChild(backdrop);
+      pop.style.zIndex = 10000;
 
       const listEl = pop.querySelector('.fp-list');
       const allEl = pop.querySelector('.fp-all');
@@ -660,6 +654,14 @@ function attachTableFilters(tableId) {
 
       // 弹窗内所有点击阻止冒泡到 backdrop
       pop.addEventListener('click', e => e.stopPropagation());
+      pop.addEventListener('mousedown', e => e.stopPropagation());
+
+      // 定位到 btn 下方
+      const rect = btn.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.top = (rect.bottom + 4) + 'px';
+      pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+      pop.style.zIndex = 10000;
 
       const renderList = (filter) => {
         const f = (filter || '').toLowerCase();
@@ -691,29 +693,13 @@ function attachTableFilters(tableId) {
       applyEl.addEventListener('click', e => {
         e.stopPropagation();
         e.preventDefault();
-        try {
-          const checked = new Set(
-            Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
-          );
-          const isAll = (checked.size === sorted.length);
-          if (isAll || checked.size === 0) {
-            delete activeFilters[col];
-          } else {
-            activeFilters[col] = checked;
-          }
-          // 翻到第 1 页(避免当前页超出新范围)
-          document.getElementById('pageInput').value = 1;
-          // 更新该列按钮状态
-          const cnt = checked.size;
-          btn.classList.toggle('active', !isAll && cnt > 0);
-          btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
-          pop.remove();
-          if (backdrop) backdrop.remove();
-          renderProducts();
-        } catch (err) {
-          console.error('apply error:', err);
-        }
+        const checked = new Set(
+          Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
+        );
+        applyFilter(col, checked, sorted.length, btn, pop, backdrop);
       });
+      // mousedown 也绑(防止某些浏览器 click 不触发)
+      applyEl.addEventListener('mousedown', e => e.stopPropagation());
 
       cancelEl.addEventListener('click', e => {
         e.stopPropagation();
@@ -739,6 +725,23 @@ function attachTableFilters(tableId) {
 
 function closeAllFilterPopovers() {
   document.querySelectorAll('.filter-popover').forEach(p => p.remove());
+  document.querySelectorAll('.filter-backdrop').forEach(b => b.remove());
+}
+
+function applyFilter(col, checked, sortedLen, btn, pop, backdrop) {
+  const isAll = (checked.size === sortedLen);
+  if (isAll || checked.size === 0) {
+    delete activeFilters[col];
+  } else {
+    activeFilters[col] = checked;
+  }
+  document.getElementById('pageInput').value = 1;
+  const cnt = checked.size;
+  btn.classList.toggle('active', !isAll && cnt > 0);
+  btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
+  if (pop && pop.parentNode) pop.remove();
+  if (backdrop && backdrop.parentNode) backdrop.remove();
+  renderProducts();
 }
 
 // Tabs
