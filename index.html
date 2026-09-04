@@ -286,7 +286,9 @@ function renderProducts() {
       ? '<span class="badge badge-new">🆕 新增</span>'
       : p.week_status === '已下架'
       ? '<span class="badge badge-removed">已下架</span>'
-      : '<span class="badge badge-exist">已存在</span>';
+      : p.week_status === '已存在'
+      ? '<span class="badge badge-exist">已存在</span>'
+      : '<span class="badge badge-empty">—</span>';
     const stockHtml = p.stock_status
       ? `<span class="stockout">${p.stock_status}</span>`
       : '<span class="empty">—</span>';
@@ -371,8 +373,9 @@ function renderChanges() {
   document.getElementById('statHomeNew').textContent = homeNew.length;
   document.getElementById('statHomeOut').textContent = homeOut.length;
   document.getElementById('statExist').textContent = existP.length;
-  const listHtml = arr => arr.length
-    ? arr.map(p => `
+  const listHtml = (arr, label) => {
+    if (!arr.length) return `<div class="empty-state">— 无${label}记录(<strong>首次快照</strong>,无上周对比,需等下周五开始累积)—</div>`;
+    return arr.map(p => `
       <div class="change-item">
         <img class="change-img" src="${p.image || ''}" onerror="this.style.background='#f5f5f7'">
         <div style="flex:1;min-width:0">
@@ -380,15 +383,15 @@ function renderChanges() {
           <div style="font-size:11px;color:#666">${p.handle} · ${p.price} · ${p.discount}</div>
         </div>
         <span class="badge badge-new" style="font-size:10px">新</span>
-      </div>`).join('')
-    : '<div class="empty-state">— 无 —</div>';
-  document.getElementById('newProductsList').innerHTML = listHtml(newP);
-  document.getElementById('homeNewList').innerHTML = listHtml(homeNew);
+      </div>`).join('');
+  };
+  document.getElementById('newProductsList').innerHTML = listHtml(newP, '新增');
+  document.getElementById('homeNewList').innerHTML = listHtml(homeNew, '首页新进');
   document.getElementById('existProductsList').innerHTML = existP.length
     ? existP.map(p => `<div class="change-item"><img class="change-img" src="${p.image || ''}" onerror="this.style.background='#f5f5f7'"><div style="flex:1"><div style="font-size:13px">${p.name}</div><div style="font-size:11px;color:#666">${p.price}</div></div></div>`).join('')
-    : '<div class="empty-state">— 无 —</div>';
+    : '<div class="empty-state">— 无 —(首次快照,无上周对比)</div>';
   document.getElementById('historyList').textContent = historyFiles.length
-    ? historyFiles.join(' / ')
+    ? historyFiles.join(' / ') + ' (本周首次留档,下周五起开始真实对比)'
     : '本次为首次,暂无历史快照';
 }
 
