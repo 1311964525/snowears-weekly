@@ -693,10 +693,17 @@ function attachTableFilters(tableId) {
       applyEl.addEventListener('click', e => {
         e.stopPropagation();
         e.preventDefault();
-        const checked = new Set(
-          Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
-        );
-        applyFilter(col, checked, sorted.length, btn, pop, backdrop);
+        // 调试:直接看 apply 是否执行
+        console.log('[APPLY CLICKED] col=', col);
+        try {
+          const checked = new Set(
+            Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
+          );
+          console.log('[APPLY] checked=', Array.from(checked));
+          applyFilter(col, checked, sorted.length, btn, pop, backdrop);
+        } catch(err) {
+          console.error('[APPLY ERROR]', err);
+        }
       });
       // mousedown 也绑(防止某些浏览器 click 不触发)
       applyEl.addEventListener('mousedown', e => e.stopPropagation());
