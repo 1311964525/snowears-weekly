@@ -175,7 +175,6 @@
               <th data-col="tags" data-type="text">标签</th>
               <th data-col="related_products" data-type="num">关联产品数</th>
               <th data-col="bestseller_link" data-type="text">BestSeller关联</th>
-              <th data-col="rank_change" data-type="text">排名变化</th>
               <th data-col="word_count" data-type="num">字数</th>
             </tr>
           </thead>
@@ -241,7 +240,7 @@
         <h3 style="margin:16px 0 8px">🎟️ Sheet 05 字段</h3>
         <p style="font-size:13px">记录 active 状态的折扣码和无码促销活动,共 4 项(LABOR20 + 3 项无码)。</p>
         <h3 style="margin:16px 0 8px">📝 Sheet 06 字段</h3>
-        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / BestSeller关联 / 排名变化 / 字数</p>
+        <p style="font-size:13px">博客追踪,共 10 篇。字段:发布时间 / 标题 / 分类 / 作者 / 标签 / 关联产品数 / BestSeller关联 / 字数</p>
         <h3 style="margin:16px 0 8px">🔧 数据来源</h3>
         <ul style="padding-left:20px;line-height:1.8;font-size:13px">
           <li>产品数据:Shopify JSON 端点 <code>/products/{handle}.json</code></li>
@@ -336,7 +335,6 @@ function renderBlogs() {
       <td>${tagsHtml || '<span class="empty">—</span>'}</td>
       <td>${b.related_products ?? '—'}</td>
       <td>${b.bestseller_link || '—'}</td>
-      <td>${b.rank_change || '—'}</td>
       <td>${b.word_count || '<span class="empty">—</span>'}</td>
     </tr>`;
   }).join('');
