@@ -77,7 +77,8 @@
   .diff-item{padding:1px 6px;background:#f5f5f7;border-radius:3px;font-size:10px;color:#1d1d1f}
   .diff-item.add{background:#d1f4d8;color:#0a6b1f}
   .diff-item.remove{background:#ffd1d1;color:#a00;text-decoration:line-through}
-  .filter-popover{width:260px;max-height:380px;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:12px;display:flex;flex-direction:column;overflow:hidden}
+  .filter-popover{width:280px;max-height:420px;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25);font-size:12px;display:flex;flex-direction:column;overflow:hidden}
+  .filter-backdrop{position:fixed;inset:0;background:transparent;z-index:9998}
   .fp-header{display:flex;gap:6px;padding:8px;border-bottom:1px solid #f0f0f0}
   .fp-search{flex:1;padding:4px 8px;border:1px solid #d2d2d7;border-radius:4px;font-size:12px}
   .fp-close{width:24px;height:24px;border:none;background:none;cursor:pointer;color:#666;font-size:14px}
@@ -620,6 +621,10 @@ function attachTableFilters(tableId) {
       const sorted = Array.from(values).sort((a, b) => a.localeCompare(b, 'zh'));
 
       // 弹窗
+      // 创建背景遮罩 + 弹窗
+      const backdrop = document.createElement('div');
+      backdrop.className = 'filter-backdrop';
+      document.body.appendChild(backdrop);
       const pop = document.createElement('div');
       pop.className = 'filter-popover';
       pop.innerHTML = `
@@ -680,36 +685,49 @@ function attachTableFilters(tableId) {
       closeEl.addEventListener('click', () => pop.remove());
       cancelEl.addEventListener('click', () => pop.remove());
 
-      applyEl.addEventListener('click', () => {
-        const checked = new Set(
-          Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
-        );
-        const isAll = (checked.size === sorted.length);
-        if (isAll || checked.size === 0) {
-          delete activeFilters[col];
-        } else {
-          activeFilters[col] = checked;
+      applyEl.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        try {
+          const checked = new Set(
+            Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
+          );
+          const isAll = (checked.size === sorted.length);
+          if (isAll || checked.size === 0) {
+            delete activeFilters[col];
+          } else {
+            activeFilters[col] = checked;
+          }
+          // 翻到第 1 页(避免当前页超出新范围)
+          document.getElementById('pageInput').value = 1;
+          // 更新该列按钮状态
+          const cnt = checked.size;
+          btn.classList.toggle('active', !isAll && cnt > 0);
+          btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
+          pop.remove();
+          if (backdrop) backdrop.remove();
+          renderProducts();
+        } catch (err) {
+          console.error('apply error:', err);
         }
-        // 翻到第 1 页(避免当前页超出新范围)
-        document.getElementById('pageInput').value = 1;
-        // 更新该列按钮状态
-        const colIdx = th.cellIndex;
-        const cnt = checked.size;
-        btn.classList.toggle('active', !isAll && cnt > 0);
-        btn.textContent = (isAll || cnt === 0) ? '▼ 筛选' : `▼ 筛选 (${cnt})`;
-        pop.remove();
-        renderProducts();
       });
 
-      // 点击弹窗外关闭
-      setTimeout(() => {
-        document.addEventListener('click', function handler(ev) {
-          if (!pop.contains(ev.target) && ev.target !== btn) {
-            pop.remove();
-            document.removeEventListener('click', handler);
-          }
-        });
-      }, 0);
+      cancelEl.addEventListener('click', e => {
+        e.stopPropagation();
+        pop.remove();
+        if (backdrop) backdrop.remove();
+      });
+      closeEl.addEventListener('click', e => {
+        e.stopPropagation();
+        pop.remove();
+        if (backdrop) backdrop.remove();
+      });
+
+      // 点击弹窗外关闭(只对 backdrop 生效,避免影响 pop 内部按钮)
+      backdrop.addEventListener('click', () => {
+        pop.remove();
+        backdrop.remove();
+      });
     });
   });
 }
