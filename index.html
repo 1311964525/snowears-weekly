@@ -30,8 +30,9 @@
   th:hover{background:#e8e8ed}
   th.sort-asc::after{content:' ▲';color:#1d1d1f;font-size:10px}
   th.sort-desc::after{content:' ▼';color:#1d1d1f;font-size:10px}
-  th .filter-input{font-size:11px;padding:3px 6px;margin-top:4px;width:100%;border:1px solid #d2d2d7;border-radius:4px;background:#fff;color:#1d1d1f;text-transform:none;letter-spacing:normal;font-weight:400}
-  th .filter-input:focus{outline:none;border-color:#0066cc}
+  th .filter-btn{display:block;font-size:10px;padding:2px 6px;margin-top:3px;width:100%;border:1px solid #d2d2d7;border-radius:4px;background:#f5f5f7;color:#1d1d1f;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  th .filter-btn:hover{background:#e8e8ed;border-color:#0066cc}
+  th .filter-btn.active{background:#0066cc;color:#fff;border-color:#0066cc}
   tr:hover td{background:#fafbfc}
   .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap}
   .badge-sale{background:#ff3b30;color:#fff}
@@ -54,6 +55,22 @@
   .stockout{color:#ff9500;font-weight:500;font-size:12px}
   .empty{color:#ccc}
   .col-meta{font-size:11px;color:#666;margin-top:2px}
+  .filter-popover{width:260px;max-height:380px;background:#fff;border:1px solid #d2d2d7;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);font-size:12px;display:flex;flex-direction:column;overflow:hidden}
+  .fp-header{display:flex;gap:6px;padding:8px;border-bottom:1px solid #f0f0f0}
+  .fp-search{flex:1;padding:4px 8px;border:1px solid #d2d2d7;border-radius:4px;font-size:12px}
+  .fp-close{width:24px;height:24px;border:none;background:none;cursor:pointer;color:#666;font-size:14px}
+  .fp-actions{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fafafa;border-bottom:1px solid #f0f0f0;font-size:11px;color:#666}
+  .fp-actions button{padding:2px 8px;border:1px solid #d2d2d7;background:#fff;border-radius:4px;cursor:pointer;font-size:11px}
+  .fp-list{flex:1;overflow-y:auto;padding:4px 0;min-height:80px;max-height:240px}
+  .fp-item{display:flex;align-items:center;gap:6px;padding:4px 10px;cursor:pointer;font-size:12px;line-height:1.3}
+  .fp-item:hover{background:#f5f5f7}
+  .fp-item input{margin:0;cursor:pointer}
+  .fp-item span{flex:1;word-break:break-word}
+  .fp-empty{padding:20px;text-align:center;color:#999;font-size:12px}
+  .fp-footer{display:flex;gap:8px;padding:8px;border-top:1px solid #f0f0f0;justify-content:flex-end}
+  .fp-apply{padding:5px 16px;background:#0066cc;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500}
+  .fp-apply:hover{background:#0055aa}
+  .fp-cancel{padding:5px 12px;background:#fff;color:#666;border:1px solid #d2d2d7;border-radius:4px;cursor:pointer;font-size:12px}
   .footer{text-align:center;color:#999;font-size:11px;padding:24px 0;border-top:1px solid #e5e5e7;margin-top:24px}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:16px}
   .stat{background:#fafafa;border-radius:8px;padding:12px;text-align:center}
@@ -424,29 +441,133 @@ function attachTableSort(tableId) {
   });
 }
 
-// 筛选
+// 筛选 - 多选 checkbox 弹窗(WPS / Excel 风格)
 function attachTableFilters(tableId) {
   const table = document.getElementById(tableId);
   if (!table) return;
   const ths = table.querySelectorAll('th[data-col]');
   ths.forEach(th => {
-    if (th.querySelector('.filter-input')) return;
-    const input = document.createElement('input');
-    input.className = 'filter-input';
-    input.placeholder = '筛选…';
-    input.addEventListener('input', e => {
+    if (th.querySelector('.filter-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = '▼ 筛选';
+    btn.type = 'button';
+    th.appendChild(btn);
+
+    btn.addEventListener('click', e => {
       e.stopPropagation();
-      const q = e.target.value.toLowerCase();
+      closeAllFilterPopovers();
       const colIdx = th.cellIndex;
       const tbody = table.querySelector('tbody');
+      // 收集该列所有非空唯一值
+      const values = new Set();
       Array.from(tbody.querySelectorAll('tr')).forEach(row => {
         const cell = row.children[colIdx];
         if (!cell) return;
-        row.style.display = cell.textContent.toLowerCase().includes(q) ? '' : 'none';
+        const txt = cell.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+        if (txt) values.add(txt);
       });
+      const sorted = Array.from(values).sort((a, b) => a.localeCompare(b, 'zh'));
+
+      // 弹窗
+      const pop = document.createElement('div');
+      pop.className = 'filter-popover';
+      pop.innerHTML = `
+        <div class="fp-header">
+          <input type="text" class="fp-search" placeholder="搜索值…">
+          <button class="fp-close" type="button">✕</button>
+        </div>
+        <div class="fp-actions">
+          <label><input type="checkbox" class="fp-all" checked> 全选</label>
+          <button class="fp-clear" type="button">清空</button>
+        </div>
+        <div class="fp-list"></div>
+        <div class="fp-footer">
+          <button class="fp-apply" type="button">应用</button>
+          <button class="fp-cancel" type="button">取消</button>
+        </div>`;
+      document.body.appendChild(pop);
+
+      // 定位到 btn 下方
+      const rect = btn.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.top = (rect.bottom + 4) + 'px';
+      pop.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+      pop.style.zIndex = 9999;
+
+      const listEl = pop.querySelector('.fp-list');
+      const allEl = pop.querySelector('.fp-all');
+      const searchEl = pop.querySelector('.fp-search');
+      const applyEl = pop.querySelector('.fp-apply');
+      const cancelEl = pop.querySelector('.fp-cancel');
+      const clearEl = pop.querySelector('.fp-clear');
+      const closeEl = pop.querySelector('.fp-close');
+
+      const renderList = (filter) => {
+        const f = (filter || '').toLowerCase();
+        listEl.innerHTML = sorted.filter(v => v.toLowerCase().includes(f)).map(v => {
+          const safe = v.replace(/"/g, '&quot;');
+          return `<label class="fp-item"><input type="checkbox" value="${safe}" checked> <span>${v.length > 36 ? v.slice(0, 36) + '…' : v}</span></label>`;
+        }).join('') || '<div class="fp-empty">无匹配</div>';
+        // 重新绑定全选联动
+        listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const boxes = listEl.querySelectorAll('input[type=checkbox]');
+            allEl.checked = Array.from(boxes).every(b => b.checked);
+          });
+        });
+      };
+      renderList('');
+
+      allEl.addEventListener('change', () => {
+        listEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = allEl.checked);
+      });
+      clearEl.addEventListener('click', () => {
+        listEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+        allEl.checked = false;
+      });
+      searchEl.addEventListener('input', () => renderList(searchEl.value));
+      closeEl.addEventListener('click', () => pop.remove());
+      cancelEl.addEventListener('click', () => pop.remove());
+
+      applyEl.addEventListener('click', () => {
+        const checked = new Set(
+          Array.from(listEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value)
+        );
+        const isAll = (checked.size === sorted.length);
+        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+          const cell = row.children[colIdx];
+          if (!cell) return;
+          const txt = cell.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+          if (isAll || checked.size === 0) {
+            row.style.display = '';
+          } else {
+            // 多值列(collection1/2/3 用换行分隔)→ 任意包含即显示
+            const cellValues = txt.split(/\s+/).filter(Boolean);
+            const match = cellValues.some(v => checked.has(v));
+            row.style.display = match ? '' : 'none';
+          }
+        });
+        btn.classList.toggle('active', !isAll);
+        btn.textContent = isAll ? '▼ 筛选' : `▼ 筛选 (${checked.size})`;
+        pop.remove();
+      });
+
+      // 点击弹窗外关闭
+      setTimeout(() => {
+        document.addEventListener('click', function handler(ev) {
+          if (!pop.contains(ev.target) && ev.target !== btn) {
+            pop.remove();
+            document.removeEventListener('click', handler);
+          }
+        });
+      }, 0);
     });
-    th.appendChild(input);
   });
+}
+
+function closeAllFilterPopovers() {
+  document.querySelectorAll('.filter-popover').forEach(p => p.remove());
 }
 
 // Tabs
