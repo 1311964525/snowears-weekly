@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnowEars 周报监控 · 2026-09-04</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB",sans-serif;background:#f5f5f7;color:#1d1d1f;line-height:1.6}
+  .container{max-width:1200px;margin:0 auto;padding:24px 20px}
+  header{background:linear-gradient(135deg,#1d1d1f 0%,#2c3e50 100%);color:#fff;padding:32px 0;margin-bottom:32px}
+  h1{font-size:28px;font-weight:600;margin-bottom:8px}
+  .subtitle{color:#999;font-size:14px}
+  .scan-meta{background:#fff;border:1px solid #e5e5e7;border-radius:8px;padding:16px 20px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:24px;font-size:14px}
+  .scan-meta div{display:flex;gap:8px}
+  .scan-meta strong{color:#1d1d1f}
+  .scan-meta span{color:#666}
+  .tabs{display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid #e5e5e7;overflow-x:auto}
+  .tab{padding:12px 20px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;color:#666;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab.active{color:#1d1d1f;border-bottom-color:#1d1d1f}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+  .card{background:#fff;border:1px solid #e5e5e7;border-radius:8px;margin-bottom:16px;overflow:hidden}
+  .card-header{padding:16px 20px;border-bottom:1px solid #e5e5e7;font-weight:600;background:#fafafa}
+  .card-body{padding:20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0}
+  th{background:#fafafa;font-weight:600;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+  tr:hover{background:#fafbfc}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+  .badge-sale{background:#ff3b30;color:#fff}
+  .badge-nosale{background:#e5e5e7;color:#666}
+  .badge-home{background:#34c759;color:#fff}
+  .badge-empty{background:transparent;color:#ccc}
+  .badge-stockout{background:#ff9500;color:#fff}
+  .price{font-weight:600}
+  .price-compare{text-decoration:line-through;color:#999;font-size:12px;margin-left:6px}
+  .discount{color:#ff3b30;font-weight:600;font-size:12px;margin-left:6px}
+  .product-name{font-weight:500;color:#1d1d1f}
+  .product-handle{color:#999;font-size:11px;margin-top:2px}
+  a{color:#0066cc;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .stockout{color:#ff9500;font-weight:500}
+  .empty{color:#ccc}
+  .footer{text-align:center;color:#999;font-size:12px;padding:32px 0;border-top:1px solid #e5e5e7;margin-top:32px}
+  @media(max-width:768px){
+    .container{padding:16px 12px}
+    h1{font-size:22px}
+    table{font-size:12px}
+    th,td{padding:8px 6px}
+    .scan-meta{flex-direction:column;gap:8px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>SnowEars 竞品监控周报</h1>
+    <div class="subtitle">snowears.com · 每周五更新</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="scan-meta">
+    <div><strong>扫描日期</strong> <span id="scanDate">2026-09-04</span></div>
+    <div><strong>产品总数</strong> <span id="productCount">9</span></div>
+    <div><strong>首页主推</strong> <span id="homepageCount">8</span></div>
+    <div><strong>在售折扣</strong> <span id="saleCount">5</span></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="products">📦 Sheet 03 · 全站产品价格</button>
+    <button class="tab" data-tab="promotions">🎟️ Sheet 05 · 促销码追踪</button>
+    <button class="tab" data-tab="readme">📋 README · 数据说明</button>
+  </div>
+
+  <!-- Products Tab -->
+  <div class="tab-content active" id="tab-products">
+    <div class="card">
+      <div class="card-header">首页主推 8 款 · 库存与价格快照</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>产品</th>
+              <th>价格</th>
+              <th>Collection</th>
+              <th>库存</th>
+              <th>变体</th>
+              <th>评分</th>
+              <th>评论</th>
+              <th>本周新</th>
+              <th>首页</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Promotions Tab -->
+  <div class="tab-content" id="tab-promotions">
+    <div class="card">
+      <div class="card-header">活跃促销 · 4 项</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead>
+            <tr>
+              <th>Code / 类型</th>
+              <th>优惠</th>
+              <th>门槛</th>
+              <th>状态</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody id="promotionsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- README Tab -->
+  <div class="tab-content" id="tab-readme">
+    <div class="card">
+      <div class="card-header">数据口径与字段说明</div>
+      <div class="card-body">
+        <h3 style="margin-bottom:12px">📅 更新频率</h3>
+        <p>每周五更新一次,本周数据快照时间:<strong>2026-09-04 17:00 GMT+8</strong></p>
+        <h3 style="margin:20px 0 12px">📊 Sheet 03 字段定义</h3>
+        <ul style="padding-left:20px;line-height:2">
+          <li><strong>扫描时间</strong>:本表生成时间</li>
+          <li><strong>产品名</strong>:snowears.com 商品标题</li>
+          <li><strong>Handle</strong>:URL slug</li>
+          <li><strong>当前价</strong>:最低可用变体价</li>
+          <li><strong>原价</strong>:compare_at_price,无则空</li>
+          <li><strong>折扣率</strong>:无则"无折扣",有则"X% off"</li>
+          <li><strong>Sale状态</strong>:是否在售折扣</li>
+          <li><strong>Collection1/2/3</strong>:所属 collection,多值</li>
+          <li><strong>产品URL</strong>:https://snowears.com/products/&lt;handle&gt;</li>
+          <li><strong>库存状态</strong>:全部有货留空,缺货颜色写"XX-无库存"</li>
+          <li><strong>变体数</strong>:variants 数量(颜色 × 尺码组合)</li>
+          <li><strong>评分</strong>:0-5 星,无评分写 0</li>
+          <li><strong>评论数</strong>:累计评论数,无评论写 0</li>
+          <li><strong>本周新增评论数</strong>:上周六至本周五新增评论,首次快照写 0</li>
+          <li><strong>是否首页产品</strong>:本次扫描在首页主推则标"是",否则留空</li>
+          <li><strong>历史首页时间</strong>:过去曾在首页的时间段,格式"2026/03/02-2026/05/02"</li>
+        </ul>
+        <h3 style="margin:20px 0 12px">🎟️ Sheet 05 字段</h3>
+        <p>记录 active 状态的折扣码和无码促销活动,共 4 项(LABOR20 + 3 项无码)。</p>
+        <h3 style="margin:20px 0 12px">🔧 数据来源</h3>
+        <ul style="padding-left:20px;line-height:2">
+          <li>产品数据:Apify cheerio 抓取 snowears.com/products/*</li>
+          <li>首页数据:Apify cheerio 抓取 snowears.com/ + Sheet 02 历史快照</li>
+          <li>促销数据:站点头部公告区 + 产品页顶部条幅</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    SnowEars Weekly Monitor · 自动更新 · 公开访问
+  </div>
+</div>
+
+<script>
+let productsData = [];
+let promotionsData = [];
+
+async function loadData() {
+  try {
+    const [pRes, prRes] = await Promise.all([
+      fetch('data/products.json'),
+      fetch('data/promotions.json')
+    ]);
+    productsData = await pRes.json();
+    promotionsData = await prRes.json();
+    renderProducts();
+    renderPromotions();
+    updateMeta();
+  } catch(e) {
+    document.getElementById('productsBody').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:40px">数据加载失败: ' + e.message + '</td></tr>';
+  }
+}
+
+function updateMeta() {
+  document.getElementById('scanDate').textContent = productsData.scan_date || '—';
+  document.getElementById('productCount').textContent = productsData.products.length;
+  document.getElementById('homepageCount').textContent = productsData.products.filter(p => p.is_homepage === '是').length;
+  document.getElementById('saleCount').textContent = productsData.products.filter(p => p.on_sale === '是').length;
+}
+
+function renderProducts() {
+  const tbody = document.getElementById('productsBody');
+  tbody.innerHTML = productsData.products.map(p => {
+    const priceHtml = `<span class="price">${p.price || '—'}</span>` +
+      (p.compare_at_price ? `<span class="price-compare">${p.compare_at_price}</span>` : '') +
+      (p.discount && p.discount !== '无折扣' ? `<span class="discount">${p.discount}</span>` : '');
+    const saleBadge = p.on_sale === '是'
+      ? '<span class="badge badge-sale">SALE</span>'
+      : '<span class="badge badge-nosale">原价</span>';
+    const homeBadge = p.is_homepage === '是'
+      ? '<span class="badge badge-home">是</span>'
+      : '<span class="badge badge-empty">·</span>';
+    const stockHtml = p.stock_status
+      ? `<span class="stockout">${p.stock_status}</span>`
+      : '<span class="empty">—</span>';
+    const collHtml = [p.collection1, p.collection2, p.collection3].filter(Boolean).map(c =>
+      `<div style="font-size:11px;color:#666">${c}</div>`
+    ).join('') || '<span class="empty">—</span>';
+    return `<tr>
+      <td>${p.row}</td>
+      <td>
+        <div class="product-name"><a href="${p.url}" target="_blank" rel="noopener">${p.name}</a></div>
+        <div class="product-handle">${p.handle} ${saleBadge}</div>
+      </td>
+      <td>${priceHtml}</td>
+      <td>${collHtml}</td>
+      <td>${stockHtml}</td>
+      <td>${p.variants_count}</td>
+      <td>${p.rating || '<span class="empty">—</span>'}</td>
+      <td>${p.reviews_count || '<span class="empty">—</span>'}</td>
+      <td>${p.weekly_new_reviews || '<span class="empty">—</span>'}</td>
+      <td>${homeBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPromotions() {
+  const tbody = document.getElementById('promotionsBody');
+  tbody.innerHTML = promotionsData.promotions.map(p => {
+    const statusBadge = p.active
+      ? '<span class="badge badge-home">Active</span>'
+      : '<span class="badge badge-nosale">Inactive</span>';
+    return `<tr>
+      <td><strong>${p.code}</strong><div style="font-size:11px;color:#666">${p.type}</div></td>
+      <td>${p.discount}</td>
+      <td>${p.min_spend || '<span class="empty">—</span>'}</td>
+      <td>${statusBadge}</td>
+      <td style="font-size:12px;color:#666">${p.description}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>
