@@ -737,12 +737,16 @@ function closeAllFilterPopovers() {
 }
 
 function applyFilter(col, checked, sortedLen, btn, pop, backdrop) {
+  console.log('[APPLY-FILTER] col=', col, 'checked size=', checked.size, 'sortedLen=', sortedLen);
   const isAll = (checked.size === sortedLen);
   if (isAll || checked.size === 0) {
+    console.log('[APPLY-FILTER] removing activeFilters[col]');
     delete activeFilters[col];
   } else {
+    console.log('[APPLY-FILTER] setting activeFilters[col]');
     activeFilters[col] = checked;
   }
+  console.log('[APPLY-FILTER] activeFilters now:', JSON.stringify(Object.fromEntries(Object.entries(activeFilters).map(([k,v]) => [k, Array.from(v)]))));
   document.getElementById('pageInput').value = 1;
   const cnt = checked.size;
   btn.classList.toggle('active', !isAll && cnt > 0);
