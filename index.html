@@ -611,13 +611,21 @@ function attachTableFilters(tableId) {
       const col = th.dataset.col;
       const colIdx = th.cellIndex;
       const tbody = table.querySelector('tbody');
-      // 收集该列所有非空唯一值
+      // 收集该列所有非空唯一值(从全集 productsData 收,不是当前页)
+      const allProducts = (tableId === 'productsTable' && typeof getFilteredProducts === 'function')
+        ? getFilteredProducts()
+        : (tableId === 'blogsTable' ? (typeof blogsData !== 'undefined' && blogsData.blogs) : Array.from(tbody.querySelectorAll('tr')));
       const values = new Set();
-      Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-        const cell = row.children[colIdx];
-        if (!cell) return;
-        const txt = cell.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
-        if (txt) values.add(txt);
+      allProducts.forEach(row => {
+        // row 可能是 product object 或 DOM row
+        let val = '';
+        if (typeof row === 'object' && !(row instanceof HTMLElement)) {
+          val = (row[col] !== undefined && row[col] !== null) ? String(row[col]) : '';
+        } else {
+          const cell = row.children?.[colIdx];
+          if (cell) val = cell.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+        }
+        if (val) val.split(/\s+/).forEach(v => { if (v) values.add(v); });
       });
       const sorted = Array.from(values).sort((a, b) => a.localeCompare(b, 'zh'));
 
