@@ -10,11 +10,9 @@
     "new": 64,
     "removed": 68,
     "homepage_count": 71,
-    "stock_change_total_products": 77,
-    "newly_out": 92,
-    "newly_in": 119,
-    "all_sold_out": 3,
-    "back_in_stock": 7
+    "stock_change_real_products": 74,
+    "stock_change_newly_out_variants": 92,
+    "stock_change_newly_in_variants": 103
   },
   "products": [
     {
@@ -2814,7 +2812,7 @@
           "Maroon / S"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -7442,12 +7440,14 @@
           "White / S"
         ],
         "newly_in": [
-          "Green / S"
+          "Army Green / XL",
+          "Red / XL",
+          "White / XL"
         ],
         "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 5,
-        "count_newly_in": 1
+        "count_newly_in": 3
       },
       "variants_count": 12,
       "in_stock_count": 4,
@@ -11224,13 +11224,11 @@
           "Green / XS",
           "Purple / XS"
         ],
-        "newly_in": [
-          "Green / S"
-        ],
+        "newly_in": [],
         "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 6,
-        "count_newly_in": 1
+        "count_newly_in": 0
       },
       "variants_count": 20,
       "in_stock_count": 3,
@@ -17124,7 +17122,7 @@
           "Khaki / M"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -17176,7 +17174,7 @@
           "Purple / L"
         ],
         "newly_in": [],
-        "all_sold_out": true,
+        "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 2,
         "count_newly_in": 0
@@ -23103,20 +23101,14 @@
       "stock_changes": {
         "newly_out": [],
         "newly_in": [
-          "Gray / L",
-          "Gray / M",
-          "Gray / S",
-          "Light Pink / L",
-          "Light Pink / M",
-          "Light Pink / S",
-          "Sky Blue / L",
-          "Sky Blue / M",
-          "Sky Blue / S"
+          "Pink / L",
+          "Pink / M",
+          "Pink / S"
         ],
         "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 0,
-        "count_newly_in": 9
+        "count_newly_in": 3
       },
       "variants_count": 15,
       "in_stock_count": 9,
@@ -23154,24 +23146,7 @@
       "collection": "Pants",
       "url": "https://snowears.com/products/solkee-i-shape-2l-flex-slim-bibs-women-s",
       "stock_status": "Brown / L-无库存, Brown / M-无库存, Brown / S-无库存, Purple / L-无库存, Purple / M-无库存 (+4 more)",
-      "stock_changes": {
-        "newly_out": [],
-        "newly_in": [
-          "Gray / L",
-          "Gray / M",
-          "Gray / S",
-          "Light Pink / L",
-          "Light Pink / M",
-          "Light Pink / S",
-          "Sky Blue / L",
-          "Sky Blue / M",
-          "Sky Blue / S"
-        ],
-        "all_sold_out": false,
-        "back_in_stock": false,
-        "count_newly_out": 0,
-        "count_newly_in": 9
-      },
+      "stock_changes": null,
       "variants_count": 18,
       "in_stock_count": 9,
       "oos_count": 9,
@@ -23871,7 +23846,7 @@
           "Brown / M"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -25888,7 +25863,7 @@
           "Black / S"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -25937,7 +25912,7 @@
           "Black / S"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -26916,14 +26891,12 @@
         ],
         "newly_in": [
           "Black / M",
-          "Purple / M",
-          "Yellow / L",
-          "Yellow / XS"
+          "Creamy White / M"
         ],
         "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 4,
-        "count_newly_in": 4
+        "count_newly_in": 2
       },
       "variants_count": 9,
       "in_stock_count": 4,
@@ -32188,13 +32161,14 @@
           "Creamy White / XS"
         ],
         "newly_in": [
-          "Creamy White / L",
-          "Creamy White / M"
+          "Pink / S",
+          "Pink / XL",
+          "Pink / XS"
         ],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 3,
-        "count_newly_in": 2
+        "count_newly_in": 3
       },
       "variants_count": 5,
       "in_stock_count": 2,
@@ -36116,7 +36090,7 @@
           "Beige / L"
         ],
         "newly_in": [],
-        "all_sold_out": false,
+        "all_sold_out": true,
         "back_in_stock": false,
         "count_newly_out": 1,
         "count_newly_in": 0
@@ -49214,21 +49188,7 @@
       "collection": "Gloves & Mittens",
       "url": "https://snowears.com/products/nandn-kevlar-winter-guard-pro-mittens",
       "stock_status": "Blue / S/M-无库存, Dark Green / L/XL-无库存, Fluorescent Green / S/M-无库存, Orange / L/XL-无库存",
-      "stock_changes": {
-        "newly_out": [],
-        "newly_in": [
-          "Dark Purple / L/XL",
-          "Dark Purple / S/M",
-          "Light Pink / L/XL",
-          "Light Pink / S/M",
-          "Light Purple / L/XL",
-          "Light Purple / S/M"
-        ],
-        "all_sold_out": false,
-        "back_in_stock": false,
-        "count_newly_out": 0,
-        "count_newly_in": 6
-      },
+      "stock_changes": null,
       "variants_count": 22,
       "in_stock_count": 18,
       "oos_count": 4,
@@ -52513,20 +52473,7 @@
       "collection": "pants",
       "url": "https://snowears.com/products/renchill-wine-baggy-style-snow-pants-unisex",
       "stock_status": "Black / XXL-无库存",
-      "stock_changes": {
-        "newly_out": [],
-        "newly_in": [
-          "Wine / L",
-          "Wine / M",
-          "Wine / S",
-          "Wine / XL",
-          "Wine / XXL"
-        ],
-        "all_sold_out": false,
-        "back_in_stock": false,
-        "count_newly_out": 0,
-        "count_newly_in": 5
-      },
+      "stock_changes": null,
       "variants_count": 10,
       "in_stock_count": 9,
       "oos_count": 1,
@@ -55099,12 +55046,15 @@
         "newly_in": [
           "Black / L",
           "Black / M",
-          "Black / S"
+          "Black / S",
+          "Blue / L",
+          "Blue / M",
+          "Blue / S"
         ],
         "all_sold_out": false,
         "back_in_stock": false,
         "count_newly_out": 1,
-        "count_newly_in": 3
+        "count_newly_in": 6
       },
       "variants_count": 9,
       "in_stock_count": 6,
@@ -57232,17 +57182,7 @@
       "collection": "hat",
       "url": "https://snowears.com/products/uhznus-active-therm-knit-beanie",
       "stock_status": "",
-      "stock_changes": {
-        "newly_out": [],
-        "newly_in": [
-          "Black",
-          "White"
-        ],
-        "all_sold_out": false,
-        "back_in_stock": false,
-        "count_newly_out": 0,
-        "count_newly_in": 2
-      },
+      "stock_changes": null,
       "variants_count": 8,
       "in_stock_count": 8,
       "oos_count": 0,
@@ -59081,7 +59021,24 @@
       "collection": "One Piece",
       "url": "https://snowears.com/products/doorek-slim-ski-jumpsuit-womens",
       "stock_status": "",
-      "stock_changes": null,
+      "stock_changes": {
+        "newly_out": [],
+        "newly_in": [
+          "Mint Green / L",
+          "Mint Green / M",
+          "Mint Green / S",
+          "Navy / L",
+          "Navy / M",
+          "Navy / S",
+          "Purple / L",
+          "Purple / M",
+          "Purple / S"
+        ],
+        "all_sold_out": false,
+        "back_in_stock": true,
+        "count_newly_out": 0,
+        "count_newly_in": 9
+      },
       "variants_count": 12,
       "in_stock_count": 12,
       "oos_count": 0,
