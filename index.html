@@ -102,7 +102,10 @@
   .fp-cancel{padding:5px 12px;background:#fff;color:#666;border:1px solid #d2d2d7;border-radius:4px;cursor:pointer;font-size:12px}
   .footer{text-align:center;color:#999;font-size:11px;padding:24px 0;border-top:1px solid #e5e5e7;margin-top:24px}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:16px}
-  .stat{background:#fafafa;border-radius:8px;padding:12px;text-align:center}
+  .stat{background:#fafafa;border-radius:8px;padding:12px;text-align:center;border:2px solid transparent;transition:all 0.2s;cursor:pointer}
+  .stat:hover{background:#f5f8ff;border-color:#0066cc}
+  .stat-tab.stat-active{background:#0066cc !important;border-color:#0066cc !important;color:#fff}
+  .stat-tab.stat-active .stat-num, .stat-tab.stat-active .stat-label{color:#fff}
   .stat-num{font-size:24px;font-weight:700;color:#1d1d1f}
   .stat-label{font-size:11px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
   .change-list{padding:12px 16px}
@@ -184,24 +187,31 @@
     <div class="card">
       <div class="card-header">本周变化 · 对比上周 (2026-08-28 → 2026-09-04)</div>
       <div class="stat-grid">
-        <div class="stat"><div class="stat-num" id="statNew">0</div><div class="stat-label">新增产品</div></div>
-        <div class="stat"><div class="stat-num" id="statRemoved">0</div><div class="stat-label">已下架</div></div>
-        <div class="stat"><div class="stat-num" id="statHomeNew">0</div><div class="stat-label">首页新进</div></div>
-        <div class="stat"><div class="stat-num" id="statHomeOut">0</div><div class="stat-label">首页退出</div></div>
-        <div class="stat"><div class="stat-num" id="statExist">0</div><div class="stat-label">持续在售</div></div>
+        <div class="stat stat-tab stat-active" data-cat="new" onclick="switchChangeTab('new')">
+          <div class="stat-num" id="statNew">0</div>
+          <div class="stat-label">新增产品</div>
+        </div>
+        <div class="stat stat-tab" data-cat="removed" onclick="switchChangeTab('removed')">
+          <div class="stat-num" id="statRemoved">0</div>
+          <div class="stat-label">已下架</div>
+        </div>
+        <div class="stat stat-tab" data-cat="homeNew" onclick="switchChangeTab('homeNew')">
+          <div class="stat-num" id="statHomeNew">0</div>
+          <div class="stat-label">首页新进</div>
+        </div>
+        <div class="stat stat-tab" data-cat="homeOut" onclick="switchChangeTab('homeOut')">
+          <div class="stat-num" id="statHomeOut">0</div>
+          <div class="stat-label">首页退出</div>
+        </div>
+        <div class="stat stat-tab" data-cat="exist" onclick="switchChangeTab('exist')">
+          <div class="stat-num" id="statExist">0</div>
+          <div class="stat-label">持续在售</div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">🆕 本周新增产品</div>
-      <div class="change-list" id="newProductsList"></div>
-    </div>
-    <div class="card">
-      <div class="card-header">🏠 首页新进</div>
-      <div class="change-list" id="homeNewList"></div>
-    </div>
-    <div class="card">
-      <div class="card-header">📦 持续在售(无变化)</div>
-      <div class="change-list" id="existProductsList"></div>
+    <div class="card" id="changePanel" data-cat="new">
+      <div class="card-header" id="changePanelHeader">🆕 本周新增产品</div>
+      <div class="change-list" id="changePanelList"></div>
     </div>
     <div class="card">
       <div class="card-header">📜 历史快照留档</div>
@@ -585,26 +595,43 @@ function renderChanges() {
   document.getElementById('statHomeNew').textContent = homeNew.length;
   document.getElementById('statHomeOut').textContent = homeOut.length;
   document.getElementById('statExist').textContent = existP.length;
-  const listHtml = (arr, label) => {
-    if (!arr.length) return `<div class="empty-state">— 无${label}记录(<strong>首次快照</strong>,无上周对比,需等下周五开始累积)—</div>`;
-    return arr.map(p => `
-      <div class="change-item">
+
+  // 缓存到全局,让 switchChangeTab 调用
+  window._changeCache = { new: newP, exist: existP, removed: removedP, homeNew, homeOut };
+
+  // 渲染当前 panel(默认 new)
+  switchChangeTab(window._changeActiveCat || 'new');
+
+  document.getElementById('historyList').textContent = historyFiles.length
+    ? historyFiles.join(' / ') + ' (本周首次留档,下周五起开始真实对比)'
+    : '本次为首次,暂无历史快照';
+}
+
+function switchChangeTab(cat) {
+  window._changeActiveCat = cat;
+  const cache = window._changeCache || {};
+  const labels = { new: '🆕 本周新增产品', removed: '❌ 已下架产品', homeNew: '🏠 首页新进', homeOut: '🚪 首页退出', exist: '📦 持续在售(无变化)' };
+  const arr = cache[cat] || [];
+  const emptyLabels = { new: '新增', removed: '已下架', homeNew: '首页新进', homeOut: '首页退出', exist: '持续在售' };
+  const listHtml = !arr.length
+    ? `<div class="empty-state">— 无${emptyLabels[cat]}记录(首次快照,无上周对比,需等下周五开始累积)—</div>`
+    : arr.map(p => {
+      const badge = cat === 'new' ? '新' : (cat === 'removed' ? '下架' : (cat === 'homeNew' ? '首页' : (cat === 'homeOut' ? '退出' : '在售')));
+      const badgeClass = cat === 'removed' ? 'badge-removed' : (cat === 'homeOut' ? 'badge-removed' : 'badge-new');
+      return `<div class="change-item">
         <img class="change-img" src="${p.image || ''}" onerror="this.style.background='#f5f5f7'">
         <div style="flex:1;min-width:0">
           <div style="font-weight:500;font-size:13px"><a href="${p.url}" target="_blank" rel="noopener">${p.name}</a></div>
           <div style="font-size:11px;color:#666">${p.handle} · ${p.price} · ${p.discount}</div>
         </div>
-        <span class="badge badge-new" style="font-size:10px">新</span>
-      </div>`).join('');
-  };
-  document.getElementById('newProductsList').innerHTML = listHtml(newP, '新增');
-  document.getElementById('homeNewList').innerHTML = listHtml(homeNew, '首页新进');
-  document.getElementById('existProductsList').innerHTML = existP.length
-    ? existP.map(p => `<div class="change-item"><img class="change-img" src="${p.image || ''}" onerror="this.style.background='#f5f5f7'"><div style="flex:1"><div style="font-size:13px">${p.name}</div><div style="font-size:11px;color:#666">${p.price}</div></div></div>`).join('')
-    : '<div class="empty-state">— 无 —(首次快照,无上周对比)</div>';
-  document.getElementById('historyList').textContent = historyFiles.length
-    ? historyFiles.join(' / ') + ' (本周首次留档,下周五起开始真实对比)'
-    : '本次为首次,暂无历史快照';
+        <span class="badge ${badgeClass}" style="font-size:10px">${badge}</span>
+      </div>`;
+    }).join('');
+  document.getElementById('changePanelHeader').textContent = labels[cat] + ' (' + arr.length + ')';
+  document.getElementById('changePanelList').innerHTML = listHtml;
+  document.getElementById('changePanel').setAttribute('data-cat', cat);
+  // 高亮对应 tab
+  document.querySelectorAll('.stat-tab').forEach(t => t.classList.toggle('stat-active', t.dataset.cat === cat));
 }
 
 // 排序
