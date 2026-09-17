@@ -1,0 +1,37 @@
+{
+  "scan_date": "2026-09-04",
+  "promotions": [
+    {
+      "code": "LABOR20",
+      "type": "折扣码",
+      "discount": "20% off",
+      "min_spend": "",
+      "active": true,
+      "description": "Labor Day 促销码 20% 折扣"
+    },
+    {
+      "code": "无码-Clearance",
+      "type": "无码促销",
+      "discount": "Up to 60% off",
+      "min_spend": "",
+      "active": true,
+      "description": "Outlet / Clearance 区域商品,最高 60% 折扣,自动应用"
+    },
+    {
+      "code": "无码-FreeShipping",
+      "type": "无码促销",
+      "discount": "Free shipping",
+      "min_spend": "$99",
+      "active": true,
+      "description": "订单满 $99 自动免邮,无码"
+    },
+    {
+      "code": "无码-14DayReturn",
+      "type": "服务政策",
+      "discount": "14 days return",
+      "min_spend": "",
+      "active": true,
+      "description": "收货后 14 天无理由退货,全站通用"
+    }
+  ]
+}
