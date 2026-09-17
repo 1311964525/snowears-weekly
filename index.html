@@ -102,11 +102,7 @@
   .fp-cancel{padding:5px 12px;background:#fff;color:#666;border:1px solid #d2d2d7;border-radius:4px;cursor:pointer;font-size:12px}
   .footer{text-align:center;color:#999;font-size:11px;padding:24px 0;border-top:1px solid #e5e5e7;margin-top:24px}
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:16px}
-  .stat{background:#fafafa;border-radius:8px;padding:12px;text-align:center;border:2px solid transparent;transition:all 0.2s}
-  .stat-clickable{cursor:pointer;user-select:none}
-  .stat-clickable:hover{background:#f5f8ff;border-color:#0066cc;transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,102,204,0.1)}
-  .stat-clickable.stat-active{background:#0066cc !important;border-color:#0066cc !important;color:#fff}
-  .stat-clickable.stat-active .stat-num, .stat-clickable.stat-active .stat-label{color:#fff}
+  .stat{background:#fafafa;border-radius:8px;padding:12px;text-align:center}
   .stat-num{font-size:24px;font-weight:700;color:#1d1d1f}
   .stat-label{font-size:11px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
   .change-list{padding:12px 16px}
@@ -188,16 +184,11 @@
     <div class="card">
       <div class="card-header">本周变化 · 对比上周 (2026-08-28 → 2026-09-04)</div>
       <div class="stat-grid">
-        <div class="stat stat-clickable" onclick="quickFilter('week_status', '新增')" id="statNewCard" data-filter-col="week_status" data-filter-val="新增"><div class="stat-num" id="statNew">0</div><div class="stat-label">新增产品</div></div>
-        <div class="stat stat-clickable" onclick="quickFilter('week_status', '已下架')" id="statRemovedCard" data-filter-col="week_status" data-filter-val="已下架"><div class="stat-num" id="statRemoved">0</div><div class="stat-label">已下架</div></div>
-        <div class="stat stat-clickable" onclick="quickFilter('homepage_status', '首页新进')" id="statHomeNewCard" data-filter-col="homepage_status" data-filter-val="首页新进"><div class="stat-num" id="statHomeNew">0</div><div class="stat-label">首页新进</div></div>
-        <div class="stat stat-clickable" onclick="quickFilter('homepage_status', '首页退出')" id="statHomeOutCard" data-filter-col="homepage_status" data-filter-val="首页退出"><div class="stat-num" id="statHomeOut">0</div><div class="stat-label">首页退出</div></div>
-        <div class="stat stat-clickable" onclick="quickFilter('week_status', '已存在')" id="statExistCard" data-filter-col="week_status" data-filter-val="已存在"><div class="stat-num" id="statExist">0</div><div class="stat-label">持续在售</div></div>
-      </div>
-      <div id="quickFilterBar" style="padding:8px 16px;background:#f5f5f7;border-top:1px solid #e5e5e7;font-size:12px;color:#666;display:none">
-        <span id="quickFilterStatus"></span>
-        <button onclick="clearQuickFilter()" style="margin-left:12px;padding:3px 10px;border:1px solid #d2d2d7;background:#fff;border-radius:4px;cursor:pointer;font-size:11px">清除筛选</button>
-        <button onclick="goToProducts()" style="margin-left:8px;padding:3px 10px;border:1px solid #0066cc;background:#0066cc;color:#fff;border-radius:4px;cursor:pointer;font-size:11px">跳到 Sheet 03 表格 →</button>
+        <div class="stat"><div class="stat-num" id="statNew">0</div><div class="stat-label">新增产品</div></div>
+        <div class="stat"><div class="stat-num" id="statRemoved">0</div><div class="stat-label">已下架</div></div>
+        <div class="stat"><div class="stat-num" id="statHomeNew">0</div><div class="stat-label">首页新进</div></div>
+        <div class="stat"><div class="stat-num" id="statHomeOut">0</div><div class="stat-label">首页退出</div></div>
+        <div class="stat"><div class="stat-num" id="statExist">0</div><div class="stat-label">持续在售</div></div>
       </div>
     </div>
     <div class="card">
@@ -798,51 +789,7 @@ function attachTableFilters(tableId) {
   });
 }
 
-// 快速筛选(数字卡点击触发):跳到 Sheet 03 并按 col/val 过滤
-function quickFilter(col, val) {
-  // 切到 products tab
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  const tab = document.querySelector('.tab[data-tab="products"]');
-  if (tab) tab.classList.add('active');
-  document.getElementById('tab-products').classList.add('active');
-  // 设筛选
-  activeFilters[col] = new Set([val]);
-  document.getElementById('pageInput').value = 1;
-  // 跳到 anchor
-  setTimeout(() => {
-    window.scrollTo({top: 0, behavior: 'smooth'});
-    renderProducts();
-    // 高亮对应数字卡
-    document.querySelectorAll('.stat-clickable').forEach(c => c.classList.remove('stat-active'));
-    const target = document.querySelector(`.stat-clickable[data-filter-col="${col}"][data-filter-val="${val}"]`);
-    if (target) target.classList.add('stat-active');
-    // 显示状态栏
-    const bar = document.getElementById('quickFilterBar');
-    const status = document.getElementById('quickFilterStatus');
-    const labels = {新增: '新增产品', '已下架': '已下架', '首页新进': '首页新进', '首页退出': '首页退出', '已存在': '持续在售'};
-    status.innerHTML = `🎯 已快速筛选: <strong>${labels[val] || val}</strong>(共 ${val === '已存在' ? '持续在售' : ''}产品)`;
-    bar.style.display = 'block';
-  }, 100);
-}
-
-function clearQuickFilter() {
-  activeFilters = {};
-  document.getElementById('pageInput').value = 1;
-  document.querySelectorAll('.stat-clickable').forEach(c => c.classList.remove('stat-active'));
-  document.getElementById('quickFilterBar').style.display = 'none';
-  // 重置筛选按钮文字
-  document.querySelectorAll('.filter-btn').forEach(b => {
-    b.classList.remove('active');
-    b.textContent = '▼ 筛选';
-  });
-  renderProducts();
-}
-
-function goToProducts() {
-  // 已经在 products tab
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
+function closeAllFilterPopovers() {
   document.querySelectorAll('.filter-popover').forEach(p => p.remove());
   document.querySelectorAll('.filter-backdrop').forEach(b => b.remove());
 }
