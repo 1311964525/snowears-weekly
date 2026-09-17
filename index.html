@@ -56,6 +56,12 @@
   a{color:#0066cc;text-decoration:none}
   a:hover{text-decoration:underline}
   .stockout{color:#ff9500;font-weight:500;font-size:12px}
+  .stock-unchanged{color:#999;font-size:11px;background:#f5f5f7;padding:2px 6px;border-radius:4px}
+  .stock-cell{padding:4px 6px;border-radius:4px;margin-bottom:3px;font-size:11px;line-height:1.3;border:1px solid transparent}
+  .stock-out{background:#ffe5e5;color:#a00;border-color:#f5b5b5}
+  .stock-in{background:#d1f4d8;color:#0a6b1f;border-color:#a5e5b0}
+  .sc-head{font-weight:600;margin-bottom:2px;font-size:11px}
+  .sc-detail{font-size:10px;color:rgba(0,0,0,0.5);margin-top:2px;font-style:italic}
   .empty{color:#ccc}
   .col-meta{font-size:11px;color:#666;margin-top:2px}
   .prod-strip{display:flex;flex-wrap:nowrap;gap:4px;align-items:center;overflow-x:auto;max-width:360px;padding:2px 0;scrollbar-width:thin}
@@ -159,7 +165,8 @@
               <th data-col="discount" data-type="text">折扣</th>
               <th data-col="on_sale" data-type="text">Sale</th>
               <th data-col="collection" data-type="text">产品分类(对应 product_type,可多选)</th>
-              <th data-col="stock_status" data-type="text">库存</th>
+              <th data-col="stock_status" data-type="text">当前库存状态</th>
+              <th data-col="stock_changes" data-type="text">本周库存变化</th>
               <th data-col="variants_count" data-type="num">变体</th>
               <th data-col="is_homepage" data-type="text">是否首页产品(主页 HTML 链接)</th>
               <th data-col="week_status" data-type="text">周变化状态(对比上周:新增/已存在/已下架)</th>
@@ -372,6 +379,42 @@ function renderProducts() {
     const stockHtml = p.stock_status
       ? `<span class="stockout">${p.stock_status}</span>`
       : '<span class="empty">—</span>';
+
+    // 库存变化渲染(紧凑版)
+    let stockChangeHtml = '<span class="empty">—</span>';
+    if (p.week_status === '新增') {
+      stockChangeHtml = '<span class="badge badge-new">🆕 全新</span>';
+    } else if (p.week_status === '已下架') {
+      stockChangeHtml = '<span class="badge badge-removed">❌ 已下架</span>';
+    } else if (p.stock_changes) {
+      const sc = p.stock_changes;
+      const parts = [];
+      const tooMany = (sc.count_newly_out + sc.count_newly_in) > 3;
+      // 缺货(优先,红色)
+      if (sc.newly_out && sc.newly_out.length) {
+        const items = sc.newly_out.slice(0, 2).map(v => `<div>${v}</div>`).join('');
+        const more = sc.newly_out.length > 2 ? `<div>+${sc.newly_out.length - 2}</div>` : '';
+        parts.push(`<div class="stock-cell stock-out"><div class="sc-head">🔴 缺货 ${sc.newly_out.length}</div>${items}${more}<div class="sc-detail">之前有→现在无</div></div>`);
+      }
+      // 补货(绿色)
+      if (sc.newly_in && sc.newly_in.length) {
+        const items = sc.newly_in.slice(0, 2).map(v => `<div>${v}</div>`).join('');
+        const more = sc.newly_in.length > 2 ? `<div>+${sc.newly_in.length - 2}</div>` : '';
+        parts.push(`<div class="stock-cell stock-in"><div class="sc-head">🟢 补货 ${sc.newly_in.length}</div>${items}${more}<div class="sc-detail">之前无→现在有</div></div>`);
+      }
+      if (sc.all_sold_out) {
+        parts.push('<div class="stock-cell stock-out" style="background:#a00;color:#fff">⚫ 全部卖光</div>');
+      }
+      if (sc.back_in_stock) {
+        parts.push('<div class="stock-cell stock-in" style="background:#0a6b1f;color:#fff">✨ 全部补齐</div>');
+      }
+      if (parts.length) {
+        const tooltip = `缺货 ${sc.newly_in.length ? ' + 补货' + sc.count_newly_in : ''} 变体:\n${[...(sc.newly_out||[]), ...(sc.newly_in||[])].map(v => '  • ' + v).join('\n')}`;
+        stockChangeHtml = `<div title="${tooltip.replace(/"/g,'&quot;')}">${parts.join('')}</div>`;
+      } else {
+        stockChangeHtml = '<span class="stock-unchanged">⚪ 无变化</span>';
+      }
+    }
     const collHtml = (p.collection || '').split('|').map(s => s.trim()).filter(Boolean).map(c =>
       `<div style="font-size:11px;color:#666">${c}</div>`
     ).join('') || '<span class="empty">—</span>';
@@ -391,6 +434,7 @@ function renderProducts() {
       <td>${p.on_sale || '<span class="empty">—</span>'}</td>
       <td>${collHtml}</td>
       <td>${stockHtml}</td>
+      <td>${stockChangeHtml}</td>
       <td>${p.variants_count || 0}</td>
       <td>${homeBadge}</td>
       <td>${weekBadge}</td>
