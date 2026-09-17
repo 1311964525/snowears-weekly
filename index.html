@@ -655,9 +655,9 @@ function attachTableFilters(tableId) {
       const col = th.dataset.col;
       const colIdx = th.cellIndex;
       const tbody = table.querySelector('tbody');
-      // 收集该列所有非空唯一值(从全集 productsData 收,不是当前页)
-      const allProducts = (tableId === 'productsTable' && typeof getFilteredProducts === 'function')
-        ? getFilteredProducts()
+      // 收集该列所有非空唯一值(从**全集** productsData 收,不受 activeFilters 影响)
+      const allProducts = (tableId === 'productsTable' && typeof productsData !== 'undefined' && productsData.products)
+        ? productsData.products
         : (tableId === 'blogsTable' ? (typeof blogsData !== 'undefined' && blogsData.blogs) : Array.from(tbody.querySelectorAll('tr')));
       const values = new Set();
       allProducts.forEach(row => {
@@ -718,11 +718,20 @@ function attachTableFilters(tableId) {
 
       const renderList = (filter) => {
         const f = (filter || '').toLowerCase();
+        // 已勾选的(从 activeFilters 拿)
+        const preChecked = activeFilters[col] || new Set();
+        // 列表项默认勾选规则:
+        // - 如果 activeFilters 没这个列 → 默认全勾(全选=无筛选)
+        // - 如果有 → 只勾 activeFilters 里的
+        const isFiltering = activeFilters[col] && activeFilters[col].size > 0;
         listEl.innerHTML = sorted.filter(v => v.toLowerCase().includes(f)).map(v => {
           const safe = v.replace(/"/g, '&quot;');
-          return `<label class="fp-item"><input type="checkbox" value="${safe}" checked> <span>${v.length > 36 ? v.slice(0, 36) + '…' : v}</span></label>`;
+          const checked = isFiltering ? preChecked.has(v) : true;
+          return `<label class="fp-item"><input type="checkbox" value="${safe}" ${checked ? 'checked' : ''}> <span>${v.length > 36 ? v.slice(0, 36) + '…' : v}</span></label>`;
         }).join('') || '<div class="fp-empty">无匹配</div>';
-        // 重新绑定全选联动
+        // 重新绑定全选联动 + 更新全选 checkbox 状态
+        const allBoxes = listEl.querySelectorAll('input[type=checkbox]');
+        allEl.checked = Array.from(allBoxes).every(b => b.checked) && allBoxes.length > 0;
         listEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
           cb.addEventListener('change', () => {
             const boxes = listEl.querySelectorAll('input[type=checkbox]');
