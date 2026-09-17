@@ -332,13 +332,34 @@ function updateMeta() {
 }
 
 function getFilteredProducts() {
-  // 按 activeFilters 跨页过滤 1503 个产品
+  // 按 activeFilters 跨页过滤
   if (!Object.keys(activeFilters).length) return productsData.products;
   return productsData.products.filter(p => {
     for (const [col, values] of Object.entries(activeFilters)) {
       if (!values || values.size === 0) continue;
+      // 特殊处理:stock_changes 是 object,按子字段匹配
+      if (col === 'stock_changes') {
+        const sc = p.stock_changes;
+        if (!sc) {
+          // 用户筛了 stock_changes 但产品没变化 → 不显示
+          // 除非筛的是"无变化"类
+          if (values.has('无变化') || values.has('⚪ 无变化')) continue;
+          return false;
+        }
+        // 子匹配:newly_out / newly_in / all_sold_out / back_in_stock / 有变化
+        let matched = false;
+        for (const v of values) {
+          if (v === '缺货' && sc.newly_out && sc.newly_out.length) { matched = true; break; }
+          if (v === '补货' && sc.newly_in && sc.newly_in.length) { matched = true; break; }
+          if (v === '全卖光' && sc.all_sold_out) { matched = true; break; }
+          if (v === '全部补齐' && sc.back_in_stock) { matched = true; break; }
+          if (v === '有变化' && ((sc.newly_out && sc.newly_out.length) || (sc.newly_in && sc.newly_in.length))) { matched = true; break; }
+        }
+        if (!matched) return false;
+        continue;
+      }
+      // 普通字段
       let cellVal = (p[col] !== undefined && p[col] !== null) ? String(p[col]) : '';
-      // 多值列(空格分隔)拆开匹配
       const cellValues = cellVal.split('|').map(s => s.trim()).filter(Boolean);
       const match = cellValues.some(v => values.has(v));
       if (!match) return false;
@@ -690,6 +711,23 @@ function attachTableFilters(tableId) {
       allProducts.forEach(row => {
         // row 可能是 product object 或 DOM row
         let val = '';
+        if (col === 'stock_changes') {
+          // 特殊:stock_changes 是 object,提取分类
+          const sc = row.stock_changes;
+          if (sc) {
+            if (sc.newly_out && sc.newly_out.length) values.add('缺货');
+            if (sc.newly_in && sc.newly_in.length) values.add('补货');
+            if (sc.all_sold_out) values.add('全卖光');
+            if (sc.back_in_stock) values.add('全部补齐');
+          } else if (row.week_status === '已存在') {
+            values.add('无变化');
+          } else if (row.week_status === '已下架') {
+            values.add('已下架');
+          } else if (row.week_status === '新增') {
+            values.add('全新');
+          }
+          return;
+        }
         if (typeof row === 'object' && !(row instanceof HTMLElement)) {
           val = (row[col] !== undefined && row[col] !== null) ? String(row[col]) : '';
         } else {
