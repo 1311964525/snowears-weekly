@@ -358,7 +358,7 @@
               <th>CTA</th>
               <th>投放起止</th>
               <th>状态</th>
-              <th>链接</th>
+              <th>素材链接</th>
             </tr></thead>
             <tbody id="metaAdsBody"></tbody>
           </table>
@@ -791,8 +791,15 @@ function renderAdsKol() {
     const isActive = a.is_active === 'true' ? '<span class="badge badge-new">在跑</span>' : '<span class="badge badge-empty">已停</span>';
     const cta = (a.cta_text || '') + (a.cta_type ? ' / ' + a.cta_type : '');
     const thumb = a.video_thumbnail
-      ? `<a href="${a.video_thumbnail}" target="_blank" rel="noopener"><img class="product-img" src="${a.video_thumbnail}" style="width:80px;height:80px;object-fit:cover;border-radius:4px" onerror="this.style.display='none'"></a>`
+      ? `<a href="${a.video_hd_url || a.video_sd_url || a.video_thumbnail}" target="_blank" rel="noopener"><img class="product-img" src="${a.video_thumbnail}" style="width:80px;height:80px;object-fit:cover;border-radius:4px" onerror="this.style.display='none'"></a>`
       : '<div class="product-img" style="width:80px;height:80px;background:#f5f5f7;border-radius:4px"></div>';
+    // 素材链接
+    const mediaLinks = [];
+    if (a.video_hd_url) mediaLinks.push(`<a href="${a.video_hd_url}" target="_blank" rel="noopener" style="color:#0066cc">HD 视频</a>`);
+    else if (a.video_sd_url) mediaLinks.push(`<a href="${a.video_sd_url}" target="_blank" rel="noopener" style="color:#0066cc">SD 视频</a>`);
+    if (a.image_url) mediaLinks.push(`<a href="${a.image_url}" target="_blank" rel="noopener" style="color:#0066cc">原图</a>`);
+    if (a.ig_permalink) mediaLinks.push(`<a href="${a.ig_permalink}" target="_blank" rel="noopener" style="color:#E1306C">IG 帖子</a>`);
+    if (a.meta_ad_url) mediaLinks.push(`<a href="${a.meta_ad_url}" target="_blank" rel="noopener" style="color:#1877F2">Meta 详情</a>`);
     return `<tr>
       <td>${thumb}</td>
       <td>${a.page_name || ''}<div style="font-size:10px;color:#999">${a.page_like_count || 0} 粉</div></td>
@@ -803,7 +810,7 @@ function renderAdsKol() {
       <td style="font-size:11px">${cta}</td>
       <td style="font-size:11px">${dates}</td>
       <td>${isActive}</td>
-      <td><a href="${a.link_url || ('https://www.facebook.com/ads/library/?id=' + a.ad_archive_id)}" target="_blank" rel="noopener" style="color:#0066cc">↗</a></td>
+      <td style="font-size:11px;white-space:nowrap">${mediaLinks.join('<br>')}</td>
     </tr>`;
   }).join('');
   attachTableSort('metaAdsTable');
