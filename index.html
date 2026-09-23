@@ -1192,7 +1192,25 @@ async function loadData() {
   }
 }
 
-loadData();
+// 多次重试,避免单次 fetch 失败导致整批数据缺失
+async function loadDataWithRetry(retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await loadData();
+      // 检查关键字段是否成功加载
+      if (adsKolData && adsKolData.items && adsKolData.items.length > 0 &&
+          adsKolStats && Object.keys(adsKolStats).length > 0) {
+        console.log('loadData OK on attempt', i + 1, '- items:', adsKolData.items.length, 'stats keys:', Object.keys(adsKolStats).length);
+        return;
+      }
+    } catch (e) {
+      console.warn('loadData attempt', i + 1, 'failed:', e.message);
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  console.error('loadData failed after', retries, 'attempts');
+}
+loadDataWithRetry();
 </script>
 </body>
 </html>
