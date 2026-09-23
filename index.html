@@ -270,7 +270,7 @@
   <!-- Ads & KOL Tab -->
   <div class="tab-content" id="tab-ads">
     <div class="card">
-      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiMeta">-</span> Meta</div>
+      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube(官方 <span id="adsKpiOfficial">-</span> / KOL <span id="adsKpiKOL">-</span>) · <span id="adsKpiMeta">-</span> Meta</div>
       <div class="scan-meta">
         <div><strong>数据来源</strong> <span>YouTube Search + Meta Ads Library(Edge headless 本地)</span></div>
         <div><strong>抓取时间</strong> <span id="adsFetchedAt">-</span></div>
@@ -701,28 +701,35 @@ function renderBlogs() {
   attachTableFilters('blogsTable');
 }
 
+// 安全赋值:元素不存在时静默跳过,避免单个 ID 拼写问题导致整个渲染中断
+function _st(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+  return el;
+}
+
 function renderAdsKol() {
   const items = adsKolData.items || [];
   const yt = items.filter(v => v.platform === 'YouTube');
   const official = items.filter(v => v.is_official);
   const kol = items.filter(v => !v.is_official);
-  document.getElementById('adsKpiYoutube').textContent = yt.length;
-  document.getElementById('adsKpiOfficial').textContent = official.length;
-  document.getElementById('adsKpiKOL').textContent = kol.length;
-  document.getElementById('adsTotal').textContent = items.length;
+  _st('adsKpiYoutube', yt.length);
+  _st('adsKpiOfficial', official.length);
+  _st('adsKpiKOL', kol.length);
+  _st('adsTotal', items.length);
   if (items[0] && items[0].fetched_at) {
-    document.getElementById('adsFetchedAt').textContent = items[0].fetched_at;
+    _st('adsFetchedAt', items[0].fetched_at);
   }
 
   // === YouTube 5 大指标 ===
   const officialAvg = official.length ? Math.round(official.reduce((s, v) => s + _parseViews(v.views), 0) / official.length) : 0;
   const kolAvg = kol.length ? Math.round(kol.reduce((s, v) => s + _parseViews(v.views), 0) / kol.length) : 0;
-  document.getElementById('stYtTotal').textContent = yt.length;
-  document.getElementById('stYtOfficial').textContent = official.length;
-  document.getElementById('stYtKol').textContent = kol.length;
-  document.getElementById('stYtOfficialAvg').textContent = officialAvg.toLocaleString();
-  document.getElementById('stYtKolAvg').textContent = kolAvg.toLocaleString();
-  document.getElementById('adsCount').textContent = items.length;
+  _st('stYtTotal', yt.length);
+  _st('stYtOfficial', official.length);
+  _st('stYtKol', kol.length);
+  _st('stYtOfficialAvg', officialAvg.toLocaleString());
+  _st('stYtKolAvg', kolAvg.toLocaleString());
+  _st('adsCount', items.length);
 
   const tbody = document.getElementById('adsBody');
   tbody.innerHTML = items.map(v => {
@@ -746,16 +753,17 @@ function renderAdsKol() {
   const m = adsKolStats.meta_stats || {};
   const ctaEntries = Object.entries(adsKolStats.cta_distribution || {});
   const fmtEntries = Object.entries(adsKolStats.format_distribution || {});
-  document.getElementById('stMetaTotal2').textContent = m.total || 0;
-  document.getElementById('stMetaActive2').textContent = m.active || 0;
-  document.getElementById('stMetaTopCta2').textContent = ctaEntries.length ? ctaEntries[0][0].split(' ')[0] : '-';
-  document.getElementById('stMetaTopCta2').style.fontSize = '14px';
-  document.getElementById('stMetaTopFormat2').textContent = fmtEntries.length ? fmtEntries[0][0] : '-';
+  _st('stMetaTotal2', m.total || 0);
+  _st('stMetaActive2', m.active || 0);
+  _st('stMetaTopCta2', ctaEntries.length ? ctaEntries[0][0].split(' ')[0] : '-');
+  const _elCta = document.getElementById('stMetaTopCta2');
+  if (_elCta) _elCta.style.fontSize = '14px';
+  _st('stMetaTopFormat2', fmtEntries.length ? fmtEntries[0][0] : '-');
   // 平均投放天数
   const dur = m.by_duration_days || {};
   const durDays = (dur['<7天']||0) * 3 + (dur['7-30天']||0) * 18 + (dur['30-90天']||0) * 60 + (dur['>90天']||0) * 120;
   const durCount = (dur['<7天']||0) + (dur['7-30天']||0) + (dur['30-90天']||0) + (dur['>90天']||0);
-  document.getElementById('stMetaAvgDays').textContent = durCount > 0 ? Math.round(durDays / durCount) : 0;
+  _st('stMetaAvgDays', durCount > 0 ? Math.round(durDays / durCount) : 0);
 
   // === Meta 维度明细表 ===
   const rows = [];
@@ -782,8 +790,8 @@ function renderAdsKol() {
 
   // === Meta Ads 列表 ===
   const meta = (adsKolData.meta_ads && adsKolData.meta_ads.ads) || [];
-  document.getElementById('metaAdsCount2').textContent = meta.length;
-  document.getElementById('adsKpiMeta').textContent = meta.length;
+  _st('metaAdsCount2', meta.length);
+  _st('adsKpiMeta', meta.length);
   const metaBody = document.getElementById('metaAdsBody');
   metaBody.innerHTML = meta.map(a => {
     const platforms = (a.publisher_platform || '').replace(/"/g, '').replace(/,/g, '·');
@@ -1182,12 +1190,14 @@ async function loadData() {
       try { historyFiles = await hRes.json(); } catch { historyFiles = []; }
     }
     updateMeta();
-    renderProducts();
-    renderBlogs();
-    renderPromotions();
-    renderChanges();
-    renderAdsKol();
+    // 每个页面独立 try/catch:单页渲染出错不影响其他页
+    [['Sheet 03 产品', renderProducts], ['Sheet 06 博客', renderBlogs],
+     ['Sheet 05 促销', renderPromotions], ['周变动日志', renderChanges],
+     ['Sheet 07 广告&KOL', renderAdsKol]].forEach(([name, fn]) => {
+      try { fn(); } catch (e) { console.error('[render] ' + name + ' 渲染失败:', e); }
+    });
   } catch(e) {
+    console.error('[loadData] 失败:', e);
     document.getElementById('productsBody').innerHTML = '<tr><td colspan="14" style="text-align:center;color:#999;padding:32px">数据加载失败: ' + e.message + '</td></tr>';
   }
 }
