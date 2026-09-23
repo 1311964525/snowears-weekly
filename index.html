@@ -349,6 +349,7 @@
         <div class="table-wrap">
           <table class="data-table" id="metaAdsTable">
             <thead><tr>
+              <th>缩略图</th>
               <th>广告主</th>
               <th>投放平台</th>
               <th>格式</th>
@@ -789,7 +790,11 @@ function renderAdsKol() {
     const dates = (a.start_date_str && a.end_date_str) ? `${a.start_date_str} ~ ${a.end_date_str}` : '';
     const isActive = a.is_active === 'true' ? '<span class="badge badge-new">在跑</span>' : '<span class="badge badge-empty">已停</span>';
     const cta = (a.cta_text || '') + (a.cta_type ? ' / ' + a.cta_type : '');
+    const thumb = a.video_thumbnail
+      ? `<a href="${a.video_thumbnail}" target="_blank" rel="noopener"><img class="product-img" src="${a.video_thumbnail}" style="width:80px;height:80px;object-fit:cover;border-radius:4px" onerror="this.style.display='none'"></a>`
+      : '<div class="product-img" style="width:80px;height:80px;background:#f5f5f7;border-radius:4px"></div>';
     return `<tr>
+      <td>${thumb}</td>
       <td>${a.page_name || ''}<div style="font-size:10px;color:#999">${a.page_like_count || 0} 粉</div></td>
       <td style="font-size:10px">${platforms}</td>
       <td>${a.display_format || ''}</td>
