@@ -298,6 +298,30 @@
       </div>
     </div>
     <div class="card">
+      <div class="card-header">📊 Sheet 07 · 广告监控 · 5 大核心指标</div>
+      <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);gap:12px;padding:12px 16px">
+        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTotal">-</div><div class="stat-label">Meta 广告总数</div></div>
+        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaActive">-</div><div class="stat-label">在跑</div></div>
+        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTopCta">-</div><div class="stat-label">常用 CTA</div></div>
+        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTopFormat">-</div><div class="stat-label">主推格式</div></div>
+        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stYtTopKol">-</div><div class="stat-label">复投 KOL 数</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">📌 Meta 广告 · 5 大维度明细</div>
+      <div class="table-wrap">
+        <table class="data-table" id="metaStatsTable">
+          <thead><tr>
+            <th>维度</th>
+            <th>分类</th>
+            <th>数量</th>
+            <th>占比 / 备注</th>
+          </tr></thead>
+          <tbody id="metaStatsBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-header">📘 Meta Ads(Facebook/IG) · <span id="metaAdsCount">0</span> 条</div>
       <div class="table-wrap">
         <table class="data-table" id="metaAdsTable">
@@ -380,6 +404,7 @@ let productsData = [];
 let promotionsData = [];
 let blogsData = [];
 let adsKolData = {items: []};
+let adsKolStats = {};
 let historyFiles = [];
 let blogProductMap = {};
 let blogHistory = {};  // 上一周的产品集合 {blog_url: [handle, ...]}
@@ -679,6 +704,56 @@ function renderAdsKol() {
   }).join('');
   attachTableSort('adsTable');
   attachTableFilters('adsTable');
+
+  // === 5 大核心指标 ===
+  const m = adsKolStats.meta_stats || {};
+  document.getElementById('stMetaTotal').textContent = m.total || 0;
+  document.getElementById('stMetaActive').textContent = m.active || 0;
+  const ctaEntries = Object.entries(adsKolStats.cta_distribution || {});
+  if (ctaEntries.length) {
+    document.getElementById('stMetaTopCta').textContent = ctaEntries[0][0].split(' ')[0];
+    document.getElementById('stMetaTopCta').style.fontSize = '14px';
+  }
+  const fmtEntries = Object.entries(adsKolStats.format_distribution || {});
+  if (fmtEntries.length) {
+    document.getElementById('stMetaTopFormat').textContent = fmtEntries[0][0];
+  }
+  const repeatKOL = (adsKolStats.youtube_stats || {}).kol_repeat_channels || [];
+  document.getElementById('stYtTopKol').textContent = repeatKOL.length;
+
+  // 维度明细表
+  const rows = [];
+  // 维度1:Meta ad 持续天数
+  const dur = m.by_duration_days || {};
+  const total = m.total || 1;
+  rows.push(['Meta 持续时间', '<7天', dur['<7天'] || 0, ((dur['<7天']||0) / total * 100).toFixed(1) + '%']);
+  rows.push(['Meta 持续时间', '7-30天', dur['7-30天'] || 0, ((dur['7-30天']||0) / total * 100).toFixed(1) + '%']);
+  rows.push(['Meta 持续时间', '30-90天', dur['30-90天'] || 0, ((dur['30-90天']||0) / total * 100).toFixed(1) + '%']);
+  rows.push(['Meta 持续时间', '>90天', dur['>90天'] || 0, ((dur['>90天']||0) / total * 100).toFixed(1) + '%']);
+  // 维度2:状态
+  rows.push(['Meta 状态', '在跑', m.active || 0, ((m.active||0) / total * 100).toFixed(1) + '%']);
+  rows.push(['Meta 状态', '已停', m.inactive || 0, ((m.inactive||0) / total * 100).toFixed(1) + '%']);
+  // 维度3:CTA 分布
+  ctaEntries.slice(0, 5).forEach(([k, v]) => {
+    rows.push(['Meta CTA', k, v, (v / total * 100).toFixed(1) + '%']);
+  });
+  // 维度4:格式分布
+  fmtEntries.forEach(([k, v]) => {
+    rows.push(['Meta 格式', k, v, (v / total * 100).toFixed(1) + '%']);
+  });
+  // 维度5:YouTube 官方 vs KOL
+  const ys = adsKolStats.youtube_stats || {};
+  rows.push(['YouTube 频道', '官方', ys.official_count || 0, '']);
+  rows.push(['YouTube 频道', 'KOL', ys.kol_count || 0, '']);
+  if (ys.official_avg_views) rows.push(['YouTube 官方均播', '-', ys.official_avg_views, ys.official_count + ' 个视频']);
+  if (ys.kol_avg_views) rows.push(['YouTube KOL 均播', '-', ys.kol_avg_views, ys.kol_count + ' 个视频']);
+  // 复投 KOL
+  (ys.kol_repeat_channels || []).forEach(c => {
+    rows.push(['YouTube 复投 KOL', c, '-', '出现 2+ 次']);
+  });
+  document.getElementById('metaStatsBody').innerHTML = rows.map(r =>
+    `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`
+  ).join('');
 
   // Meta Ads
   const meta = (adsKolData.meta_ads && adsKolData.meta_ads.ads) || [];
@@ -1006,13 +1081,14 @@ document.querySelectorAll('.tab').forEach(btn => {
 
 async function loadData() {
   try {
-    const [pRes, prRes, bRes, mRes, hRes, aRes] = await Promise.all([
+    const [pRes, prRes, bRes, mRes, hRes, aRes, sRes] = await Promise.all([
       fetch('data/products.json'),
       fetch('data/promotions.json'),
       fetch('data/blogs.json'),
       fetch('data/blog_product_map.json').catch(() => ({ok: false, json: () => ({})})),
       fetch('data/history/index.json').catch(() => ({ok: false, json: () => []})),
-      fetch('data/ads_kol.json').catch(() => ({ok: false, json: () => ({items: []})}))
+      fetch('data/ads_kol.json').catch(() => ({ok: false, json: () => ({items: []})})),
+      fetch('data/ads_kol_stats.json').catch(() => ({ok: false, json: () => ({})}))
     ]);
     productsData = await pRes.json();
     promotionsData = await prRes.json();
@@ -1037,6 +1113,9 @@ async function loadData() {
 
   if (aRes && aRes.ok) {
     try { adsKolData = await aRes.json(); } catch { adsKolData = {items: []}; }
+  }
+  if (sRes && sRes.ok) {
+    try { adsKolStats = await sRes.json(); } catch { adsKolStats = {}; }
   }
   if (hRes && hRes.ok) {
       try { historyFiles = await hRes.json(); } catch { historyFiles = []; }
