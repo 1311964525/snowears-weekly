@@ -270,76 +270,101 @@
   <!-- Ads & KOL Tab -->
   <div class="tab-content" id="tab-ads">
     <div class="card">
-      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiOfficial">-</span> 官方 · <span id="adsKpiKOL">-</span> KOL · <span id="adsKpiMeta">-</span> Meta</div>
+      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiMeta">-</span> Meta</div>
       <div class="scan-meta">
-        <div><strong>数据来源</strong> <span>YouTube Search(snowears ski / snowboard / official)</span></div>
+        <div><strong>数据来源</strong> <span>YouTube Search + Meta Ads Library(Edge headless 本地)</span></div>
         <div><strong>抓取时间</strong> <span id="adsFetchedAt">-</span></div>
         <div><strong>抓取频率</strong> <span>每周五 16:00 自动</span></div>
         <div><strong>总视频数</strong> <span id="adsTotal">-</span></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header">📺 YouTube 视频列表(75 条)</div>
-      <div class="table-wrap">
-        <table class="data-table" id="adsTable">
-          <thead><tr>
-            <th>平台</th>
-            <th>缩略图</th>
-            <th>标题</th>
-            <th>频道</th>
-            <th>观看数</th>
-            <th>发布</th>
-            <th>时长</th>
-            <th>官方?</th>
-            <th>链接</th>
-          </tr></thead>
-          <tbody id="adsBody"></tbody>
-        </table>
+      <div style="padding:14px 16px 0;display:flex;gap:8px;border-bottom:1px solid #e5e5e7;background:#fafafa">
+        <button class="ads-sub-tab active" data-sub="youtube" onclick="switchAdsSub('youtube')" style="padding:10px 24px;border:none;background:transparent;font-size:14px;font-weight:600;color:#0066cc;cursor:pointer;border-bottom:3px solid #0066cc;margin-bottom:-1px">📺 YouTube 维度</button>
+        <button class="ads-sub-tab" data-sub="meta" onclick="switchAdsSub('meta')" style="padding:10px 24px;border:none;background:transparent;font-size:14px;font-weight:500;color:#666;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px">📘 Meta Ads 维度</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">📊 Sheet 07 · 广告监控 · 5 大核心指标</div>
-      <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);gap:12px;padding:12px 16px">
-        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTotal">-</div><div class="stat-label">Meta 广告总数</div></div>
-        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaActive">-</div><div class="stat-label">在跑</div></div>
-        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTopCta">-</div><div class="stat-label">常用 CTA</div></div>
-        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stMetaTopFormat">-</div><div class="stat-label">主推格式</div></div>
-        <div class="stat stat-mini" style="padding:12px"><div class="stat-num" id="stYtTopKol">-</div><div class="stat-label">复投 KOL 数</div></div>
+
+    <!-- YouTube 维度 -->
+    <div id="adsSubYouTube">
+      <div class="card">
+        <div class="card-header">📊 YouTube 5 大核心指标</div>
+        <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);gap:12px;padding:12px 16px">
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stYtTotal">-</div><div class="stat-label">总视频数</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stYtOfficial">-</div><div class="stat-label">官方</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stYtKol">-</div><div class="stat-label">KOL</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stYtOfficialAvg">-</div><div class="stat-label">官方均播</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stYtKolAvg">-</div><div class="stat-label">KOL 均播</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">📌 YouTube 视频列表(<span id="adsCount">0</span> 条)</div>
+        <div class="table-wrap">
+          <table class="data-table" id="adsTable">
+            <thead><tr>
+              <th>平台</th>
+              <th>缩略图</th>
+              <th>标题</th>
+              <th>频道</th>
+              <th>观看数</th>
+              <th>发布</th>
+              <th>时长</th>
+              <th>官方?</th>
+              <th>链接</th>
+            </tr></thead>
+            <tbody id="adsBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">📌 Meta 广告 · 5 大维度明细</div>
-      <div class="table-wrap">
-        <table class="data-table" id="metaStatsTable">
-          <thead><tr>
-            <th>维度</th>
-            <th>分类</th>
-            <th>数量</th>
-            <th>占比 / 备注</th>
-          </tr></thead>
-          <tbody id="metaStatsBody"></tbody>
-        </table>
+
+    <!-- Meta 维度 -->
+    <div id="adsSubMeta" style="display:none">
+      <div class="card">
+        <div class="card-header">📊 Meta 5 大核心指标</div>
+        <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);gap:12px;padding:12px 16px">
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stMetaTotal2">-</div><div class="stat-label">广告总数</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stMetaActive2">-</div><div class="stat-label">在跑</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stMetaTopCta2">-</div><div class="stat-label">常用 CTA</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stMetaTopFormat2">-</div><div class="stat-label">主推格式</div></div>
+          <div class="stat" style="padding:12px"><div class="stat-num" id="stMetaAvgDays">-</div><div class="stat-label">平均投放天数</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">📌 Meta 广告 · 5 大维度明细</div>
+        <div class="table-wrap">
+          <table class="data-table" id="metaStatsTable">
+            <thead><tr>
+              <th>维度</th>
+              <th>分类</th>
+              <th>数量</th>
+              <th>占比 / 备注</th>
+            </tr></thead>
+            <tbody id="metaStatsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">📘 Meta Ads 列表(<span id="metaAdsCount2">0</span> 条)</div>
+        <div class="table-wrap">
+          <table class="data-table" id="metaAdsTable">
+            <thead><tr>
+              <th>广告主</th>
+              <th>投放平台</th>
+              <th>格式</th>
+              <th>标题</th>
+              <th>文案(body)</th>
+              <th>CTA</th>
+              <th>投放起止</th>
+              <th>状态</th>
+              <th>链接</th>
+            </tr></thead>
+            <tbody id="metaAdsBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">📘 Meta Ads(Facebook/IG) · <span id="metaAdsCount">0</span> 条</div>
-      <div class="table-wrap">
-        <table class="data-table" id="metaAdsTable">
-          <thead><tr>
-            <th>广告主</th>
-            <th>投放平台</th>
-            <th>格式</th>
-            <th>标题</th>
-            <th>文案(body)</th>
-            <th>CTA</th>
-            <th>投放起止</th>
-            <th>状态</th>
-            <th>链接</th>
-          </tr></thead>
-          <tbody id="metaAdsBody"></tbody>
-        </table>
-      </div>
-    </div>
+
     <div class="card">
       <div class="card-header">📌 待接入平台</div>
       <ul style="padding:0 16px;color:#666;font-size:13px;line-height:1.8">
@@ -687,6 +712,17 @@ function renderAdsKol() {
   if (items[0] && items[0].fetched_at) {
     document.getElementById('adsFetchedAt').textContent = items[0].fetched_at;
   }
+
+  // === YouTube 5 大指标 ===
+  const officialAvg = official.length ? Math.round(official.reduce((s, v) => s + _parseViews(v.views), 0) / official.length) : 0;
+  const kolAvg = kol.length ? Math.round(kol.reduce((s, v) => s + _parseViews(v.views), 0) / kol.length) : 0;
+  document.getElementById('stYtTotal').textContent = yt.length;
+  document.getElementById('stYtOfficial').textContent = official.length;
+  document.getElementById('stYtKol').textContent = kol.length;
+  document.getElementById('stYtOfficialAvg').textContent = officialAvg.toLocaleString();
+  document.getElementById('stYtKolAvg').textContent = kolAvg.toLocaleString();
+  document.getElementById('adsCount').textContent = items.length;
+
   const tbody = document.getElementById('adsBody');
   tbody.innerHTML = items.map(v => {
     const thumb = v.thumbnail ? `<img class="product-img" src="${v.thumbnail}" onerror="this.style.display='none'">` : '<div class="product-img" style="background:#f5f5f7"></div>';
@@ -705,59 +741,47 @@ function renderAdsKol() {
   attachTableSort('adsTable');
   attachTableFilters('adsTable');
 
-  // === 5 大核心指标 ===
+  // === Meta 5 大指标 ===
   const m = adsKolStats.meta_stats || {};
-  document.getElementById('stMetaTotal').textContent = m.total || 0;
-  document.getElementById('stMetaActive').textContent = m.active || 0;
   const ctaEntries = Object.entries(adsKolStats.cta_distribution || {});
-  if (ctaEntries.length) {
-    document.getElementById('stMetaTopCta').textContent = ctaEntries[0][0].split(' ')[0];
-    document.getElementById('stMetaTopCta').style.fontSize = '14px';
-  }
   const fmtEntries = Object.entries(adsKolStats.format_distribution || {});
-  if (fmtEntries.length) {
-    document.getElementById('stMetaTopFormat').textContent = fmtEntries[0][0];
-  }
-  const repeatKOL = (adsKolStats.youtube_stats || {}).kol_repeat_channels || [];
-  document.getElementById('stYtTopKol').textContent = repeatKOL.length;
-
-  // 维度明细表
-  const rows = [];
-  // 维度1:Meta ad 持续天数
+  document.getElementById('stMetaTotal2').textContent = m.total || 0;
+  document.getElementById('stMetaActive2').textContent = m.active || 0;
+  document.getElementById('stMetaTopCta2').textContent = ctaEntries.length ? ctaEntries[0][0].split(' ')[0] : '-';
+  document.getElementById('stMetaTopCta2').style.fontSize = '14px';
+  document.getElementById('stMetaTopFormat2').textContent = fmtEntries.length ? fmtEntries[0][0] : '-';
+  // 平均投放天数
   const dur = m.by_duration_days || {};
+  const durDays = (dur['<7天']||0) * 3 + (dur['7-30天']||0) * 18 + (dur['30-90天']||0) * 60 + (dur['>90天']||0) * 120;
+  const durCount = (dur['<7天']||0) + (dur['7-30天']||0) + (dur['30-90天']||0) + (dur['>90天']||0);
+  document.getElementById('stMetaAvgDays').textContent = durCount > 0 ? Math.round(durDays / durCount) : 0;
+
+  // === Meta 维度明细表 ===
+  const rows = [];
   const total = m.total || 1;
   rows.push(['Meta 持续时间', '<7天', dur['<7天'] || 0, ((dur['<7天']||0) / total * 100).toFixed(1) + '%']);
   rows.push(['Meta 持续时间', '7-30天', dur['7-30天'] || 0, ((dur['7-30天']||0) / total * 100).toFixed(1) + '%']);
   rows.push(['Meta 持续时间', '30-90天', dur['30-90天'] || 0, ((dur['30-90天']||0) / total * 100).toFixed(1) + '%']);
   rows.push(['Meta 持续时间', '>90天', dur['>90天'] || 0, ((dur['>90天']||0) / total * 100).toFixed(1) + '%']);
-  // 维度2:状态
   rows.push(['Meta 状态', '在跑', m.active || 0, ((m.active||0) / total * 100).toFixed(1) + '%']);
   rows.push(['Meta 状态', '已停', m.inactive || 0, ((m.inactive||0) / total * 100).toFixed(1) + '%']);
-  // 维度3:CTA 分布
-  ctaEntries.slice(0, 5).forEach(([k, v]) => {
-    rows.push(['Meta CTA', k, v, (v / total * 100).toFixed(1) + '%']);
-  });
-  // 维度4:格式分布
-  fmtEntries.forEach(([k, v]) => {
-    rows.push(['Meta 格式', k, v, (v / total * 100).toFixed(1) + '%']);
-  });
-  // 维度5:YouTube 官方 vs KOL
+  ctaEntries.slice(0, 5).forEach(([k, v]) => rows.push(['Meta CTA', k, v, (v / total * 100).toFixed(1) + '%']));
+  fmtEntries.forEach(([k, v]) => rows.push(['Meta 格式', k, v, (v / total * 100).toFixed(1) + '%']));
   const ys = adsKolStats.youtube_stats || {};
   rows.push(['YouTube 频道', '官方', ys.official_count || 0, '']);
   rows.push(['YouTube 频道', 'KOL', ys.kol_count || 0, '']);
-  if (ys.official_avg_views) rows.push(['YouTube 官方均播', '-', ys.official_avg_views, ys.official_count + ' 个视频']);
-  if (ys.kol_avg_views) rows.push(['YouTube KOL 均播', '-', ys.kol_avg_views, ys.kol_count + ' 个视频']);
-  // 复投 KOL
-  (ys.kol_repeat_channels || []).forEach(c => {
-    rows.push(['YouTube 复投 KOL', c, '-', '出现 2+ 次']);
-  });
+  if (ys.official_avg_views) rows.push(['YouTube 官方均播', '-', ys.official_avg_views.toLocaleString(), ys.official_count + ' 个视频']);
+  if (ys.kol_avg_views) rows.push(['YouTube KOL 均播', '-', ys.kol_avg_views.toLocaleString(), ys.kol_count + ' 个视频']);
+  (ys.kol_repeat_channels || []).forEach(c => rows.push(['YouTube 复投 KOL', c, '-', '出现 2+ 次']));
   document.getElementById('metaStatsBody').innerHTML = rows.map(r =>
     `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`
   ).join('');
+  attachTableSort('metaStatsTable');
+  attachTableFilters('metaStatsTable');
 
-  // Meta Ads
+  // === Meta Ads 列表 ===
   const meta = (adsKolData.meta_ads && adsKolData.meta_ads.ads) || [];
-  document.getElementById('metaAdsCount').textContent = meta.length;
+  document.getElementById('metaAdsCount2').textContent = meta.length;
   document.getElementById('adsKpiMeta').textContent = meta.length;
   const metaBody = document.getElementById('metaAdsBody');
   metaBody.innerHTML = meta.map(a => {
@@ -779,6 +803,31 @@ function renderAdsKol() {
   }).join('');
   attachTableSort('metaAdsTable');
   attachTableFilters('metaAdsTable');
+}
+
+function _parseViews(s) {
+  s = (s || '').replace(/,/g, '').replace(' views', '').trim();
+  if (!s) return 0;
+  const m = s.match(/^(\d+)([KM]?)$/);
+  if (!m) return 0;
+  const n = parseInt(m[1]);
+  return n * (m[2] === 'K' ? 1000 : m[2] === 'M' ? 1_000_000 : 1);
+}
+
+function switchAdsSub(which) {
+  document.getElementById('adsSubYouTube').style.display = which === 'youtube' ? '' : 'none';
+  document.getElementById('adsSubMeta').style.display = which === 'meta' ? '' : 'none';
+  document.querySelectorAll('.ads-sub-tab').forEach(b => {
+    if (b.dataset.sub === which) {
+      b.style.color = '#0066cc';
+      b.style.fontWeight = '600';
+      b.style.borderBottomColor = '#0066cc';
+    } else {
+      b.style.color = '#666';
+      b.style.fontWeight = '500';
+      b.style.borderBottomColor = 'transparent';
+    }
+  });
 }
 
 function renderPromotions() {
