@@ -143,6 +143,7 @@
     <button class="tab" data-tab="changes">📈 周变动日志</button>
     <button class="tab" data-tab="blogs">📝 Sheet 06 · 博客追踪</button>
     <button class="tab" data-tab="promotions">🎟️ Sheet 05 · 促销码追踪</button>
+    <button class="tab" data-tab="ads">📺 Sheet 07 · 广告 & KOL</button>
     <button class="tab" data-tab="readme">📋 README</button>
   </div>
 
@@ -266,6 +267,47 @@
     </div>
   </div>
 
+  <!-- Ads & KOL Tab -->
+  <div class="tab-content" id="tab-ads">
+    <div class="card">
+      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiOfficial">-</span> 官方 · <span id="adsKpiKOL">-</span> KOL</div>
+      <div class="scan-meta">
+        <div><strong>数据来源</strong> <span>YouTube Search(snowears ski / snowboard / official)</span></div>
+        <div><strong>抓取时间</strong> <span id="adsFetchedAt">-</span></div>
+        <div><strong>抓取频率</strong> <span>每周五 16:00 自动</span></div>
+        <div><strong>总视频数</strong> <span id="adsTotal">-</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">📺 YouTube 视频列表(75 条)</div>
+      <div class="table-wrap">
+        <table class="data-table" id="adsTable">
+          <thead><tr>
+            <th>平台</th>
+            <th>缩略图</th>
+            <th>标题</th>
+            <th>频道</th>
+            <th>观看数</th>
+            <th>发布</th>
+            <th>时长</th>
+            <th>官方?</th>
+            <th>链接</th>
+          </tr></thead>
+          <tbody id="adsBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">📌 待接入平台</div>
+      <ul style="padding:0 16px;color:#666;font-size:13px;line-height:1.8">
+        <li>📘 <strong>Meta Ads Library</strong>(Facebook/IG 广告):需 cheerio + headless 渲染绕过 WAF,首期未接入,预计下周五前完成</li>
+        <li>🎵 <strong>TikTok 官方主页</strong>:TikTok 用了 Slardar WAF,普通抓取被挡,需要 headless 渲染或预热 cookie</li>
+        <li>🔍 <strong>TikTok 搜索 "snowears"</strong>:同上</li>
+        <li>📺 <strong>YouTube KOL 频道订阅追踪</strong>:目前只搜"关键词",不追踪具体 KOL,后续可加入</li>
+      </ul>
+    </div>
+  </div>
+
   <!-- README Tab -->
   <div class="tab-content" id="tab-readme">
     <div class="card">
@@ -318,6 +360,7 @@
 let productsData = [];
 let promotionsData = [];
 let blogsData = [];
+let adsKolData = {items: []};
 let historyFiles = [];
 let blogProductMap = {};
 let blogHistory = {};  // 上一周的产品集合 {blog_url: [handle, ...]}
@@ -586,6 +629,37 @@ function renderBlogs() {
 
   attachTableSort('blogsTable');
   attachTableFilters('blogsTable');
+}
+
+function renderAdsKol() {
+  const items = adsKolData.items || [];
+  const yt = items.filter(v => v.platform === 'YouTube');
+  const official = items.filter(v => v.is_official);
+  const kol = items.filter(v => !v.is_official);
+  document.getElementById('adsKpiYoutube').textContent = yt.length;
+  document.getElementById('adsKpiOfficial').textContent = official.length;
+  document.getElementById('adsKpiKOL').textContent = kol.length;
+  document.getElementById('adsTotal').textContent = items.length;
+  if (items[0] && items[0].fetched_at) {
+    document.getElementById('adsFetchedAt').textContent = items[0].fetched_at;
+  }
+  const tbody = document.getElementById('adsBody');
+  tbody.innerHTML = items.map(v => {
+    const thumb = v.thumbnail ? `<img class="product-img" src="${v.thumbnail}" onerror="this.style.display='none'">` : '<div class="product-img" style="background:#f5f5f7"></div>';
+    return `<tr>
+      <td><span class="badge" style="background:#ff0000;color:#fff">${v.platform}</span></td>
+      <td>${thumb}</td>
+      <td style="font-size:12px;max-width:300px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(v.title||'').replace(/"/g,'&quot;')}">${v.title || ''}</div></td>
+      <td>${v.channel || ''}</td>
+      <td>${v.views || ''}</td>
+      <td>${v.time || ''}</td>
+      <td>${v.duration || ''}</td>
+      <td>${v.is_official ? '<span class="badge badge-new">官方</span>' : '<span class="badge badge-exist">KOL</span>'}</td>
+      <td><a href="${v.url}" target="_blank" rel="noopener" style="color:#0066cc">↗ 打开</a></td>
+    </tr>`;
+  }).join('');
+  attachTableSort('adsTable');
+  attachTableFilters('adsTable');
 }
 
 function renderPromotions() {
@@ -888,12 +962,13 @@ document.querySelectorAll('.tab').forEach(btn => {
 
 async function loadData() {
   try {
-    const [pRes, prRes, bRes, mRes, hRes] = await Promise.all([
+    const [pRes, prRes, bRes, mRes, hRes, aRes] = await Promise.all([
       fetch('data/products.json'),
       fetch('data/promotions.json'),
       fetch('data/blogs.json'),
       fetch('data/blog_product_map.json').catch(() => ({ok: false, json: () => ({})})),
-      fetch('data/history/index.json').catch(() => ({ok: false, json: () => []}))
+      fetch('data/history/index.json').catch(() => ({ok: false, json: () => []})),
+      fetch('data/ads_kol.json').catch(() => ({ok: false, json: () => ({items: []})}))
     ]);
     productsData = await pRes.json();
     promotionsData = await prRes.json();
@@ -916,6 +991,9 @@ async function loadData() {
     } catch {}
   }
 
+  if (aRes && aRes.ok) {
+    try { adsKolData = await aRes.json(); } catch { adsKolData = {items: []}; }
+  }
   if (hRes && hRes.ok) {
       try { historyFiles = await hRes.json(); } catch { historyFiles = []; }
     }
@@ -924,6 +1002,7 @@ async function loadData() {
     renderBlogs();
     renderPromotions();
     renderChanges();
+    renderAdsKol();
   } catch(e) {
     document.getElementById('productsBody').innerHTML = '<tr><td colspan="14" style="text-align:center;color:#999;padding:32px">数据加载失败: ' + e.message + '</td></tr>';
   }
