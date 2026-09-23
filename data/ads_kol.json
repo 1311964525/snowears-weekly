@@ -5,11 +5,11 @@
     "youtube_search_snowears_snowboard",
     "youtube_search_snowears_official"
   ],
-  "total": 75,
+  "total": 105,
   "platforms": {
     "youtube": 75,
     "tiktok": 0,
-    "meta_ads": 0
+    "meta_ads": 30
   },
   "items": [
     {
@@ -1213,5 +1213,24 @@
       "status": "已发布"
     }
   ],
-  "note": "首期仅 YouTube;TikTok 需 headless 渲染,Meta Ads Library 需登录态,后续接入"
-}
+  "note": "YouTube + Meta Ads (Meta via Edge headless 本地)",
+  "meta_ads": {
+    "scan_date": "2026-09-23",
+    "total": 30,
+    "snowears_related": 30,
+    "source": "Meta Ads Library (Edge headless)",
+    "ads": [
+      {
+        "ad_archive_id": "949213647742379",
+        "collation_count": "1",
+        "collation_id": "750924091012130",
+        "is_active": "true",
+        "start_date": "1777964400",
+        "end_date": "1790060400",
+        "publisher_platform": "\"FACEBOOK\",\"INSTAGRAM\",\"AUDIENCE_NETWORK\",\"MESSENGER\",\"THREADS\"",
+        "page_name": "SnowearsOutdoor",
+        "page_profile_uri": "https:\\/\\/www.facebook.com\\/100093037910948\\/",
+        "page_like_count": "6836",
+        "page_categories": "\"Clothing (Brand)\"",
+        "caption": "snowears.com",
+        "title": 

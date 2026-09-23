@@ -270,7 +270,7 @@
   <!-- Ads & KOL Tab -->
   <div class="tab-content" id="tab-ads">
     <div class="card">
-      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiOfficial">-</span> 官方 · <span id="adsKpiKOL">-</span> KOL</div>
+      <div class="card-header">Sheet 07 · 广告 & KOL 监控 · <span id="adsKpiYoutube">-</span> YouTube · <span id="adsKpiOfficial">-</span> 官方 · <span id="adsKpiKOL">-</span> KOL · <span id="adsKpiMeta">-</span> Meta</div>
       <div class="scan-meta">
         <div><strong>数据来源</strong> <span>YouTube Search(snowears ski / snowboard / official)</span></div>
         <div><strong>抓取时间</strong> <span id="adsFetchedAt">-</span></div>
@@ -298,9 +298,28 @@
       </div>
     </div>
     <div class="card">
+      <div class="card-header">📘 Meta Ads(Facebook/IG) · <span id="metaAdsCount">0</span> 条</div>
+      <div class="table-wrap">
+        <table class="data-table" id="metaAdsTable">
+          <thead><tr>
+            <th>广告主</th>
+            <th>投放平台</th>
+            <th>格式</th>
+            <th>标题</th>
+            <th>文案(body)</th>
+            <th>CTA</th>
+            <th>投放起止</th>
+            <th>状态</th>
+            <th>链接</th>
+          </tr></thead>
+          <tbody id="metaAdsBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-header">📌 待接入平台</div>
       <ul style="padding:0 16px;color:#666;font-size:13px;line-height:1.8">
-        <li>📘 <strong>Meta Ads Library</strong>(Facebook/IG 广告):需 cheerio + headless 渲染绕过 WAF,首期未接入,预计下周五前完成</li>
+        <li>📘 <strong>Meta Ads Library</strong> ✅ 已完成(Edge headless 本地抓取,30 条 SnowearsOutdoor)</li>
         <li>🎵 <strong>TikTok 官方主页</strong>:TikTok 用了 Slardar WAF,普通抓取被挡,需要 headless 渲染或预热 cookie</li>
         <li>🔍 <strong>TikTok 搜索 "snowears"</strong>:同上</li>
         <li>📺 <strong>YouTube KOL 频道订阅追踪</strong>:目前只搜"关键词",不追踪具体 KOL,后续可加入</li>
@@ -660,6 +679,31 @@ function renderAdsKol() {
   }).join('');
   attachTableSort('adsTable');
   attachTableFilters('adsTable');
+
+  // Meta Ads
+  const meta = (adsKolData.meta_ads && adsKolData.meta_ads.ads) || [];
+  document.getElementById('metaAdsCount').textContent = meta.length;
+  document.getElementById('adsKpiMeta').textContent = meta.length;
+  const metaBody = document.getElementById('metaAdsBody');
+  metaBody.innerHTML = meta.map(a => {
+    const platforms = (a.publisher_platform || '').replace(/"/g, '').replace(/,/g, '·');
+    const dates = (a.start_date_str && a.end_date_str) ? `${a.start_date_str} ~ ${a.end_date_str}` : '';
+    const isActive = a.is_active === 'true' ? '<span class="badge badge-new">在跑</span>' : '<span class="badge badge-empty">已停</span>';
+    const cta = (a.cta_text || '') + (a.cta_type ? ' / ' + a.cta_type : '');
+    return `<tr>
+      <td>${a.page_name || ''}<div style="font-size:10px;color:#999">${a.page_like_count || 0} 粉</div></td>
+      <td style="font-size:10px">${platforms}</td>
+      <td>${a.display_format || ''}</td>
+      <td style="font-size:12px;max-width:240px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(a.title||'').replace(/"/g,'&quot;')}">${a.title || ''}</div></td>
+      <td style="font-size:12px;max-width:280px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(a.body_text||'').replace(/"/g,'&quot;')}">${a.body_text || ''}</div></td>
+      <td style="font-size:11px">${cta}</td>
+      <td style="font-size:11px">${dates}</td>
+      <td>${isActive}</td>
+      <td><a href="${a.link_url || ('https://www.facebook.com/ads/library/?id=' + a.ad_archive_id)}" target="_blank" rel="noopener" style="color:#0066cc">↗</a></td>
+    </tr>`;
+  }).join('');
+  attachTableSort('metaAdsTable');
+  attachTableFilters('metaAdsTable');
 }
 
 function renderPromotions() {
